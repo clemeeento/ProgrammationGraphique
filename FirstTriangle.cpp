@@ -11,7 +11,20 @@ const int gWindowHeight = 600;
 GLFWwindow* gWindow = NULL;
 bool gFullScreen = false;
 
-// Fonction de rappel pour la gestion des événements clavier
+// Shaders
+const GLchar* vertexShaderSource = // Vertex Shader
+    "#version 330 core\n"
+    "layout (location = 0) in vec3 position;" // Position du sommet
+    "void main()"
+    "{ gl_Position = vec4(position.x, position.y, position.z, 1.0);}"; // Position du sommet
+
+const GLchar* fragmentShaderSource = // Fragment Shader
+    "#version 330 core\n"
+    "out vec4 fragColor;" // Couleur du fragment
+    "void main()" 
+    "{ fragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);}"; // Couleur orange
+
+// Fonction de rappel pour la gestion des evenements clavier
 void glfw_onKey(GLFWwindow* gWindow, int key, int scancode, int action, int mode)
 {
     // Touche ECHAP : fermer la fenêtre
@@ -27,7 +40,7 @@ void showFPS(GLFWwindow* gWindow)
     static double previousSeconds = 0.0;
     static int frameCount = 0;
     double elapsedSeconds;
-    double currentSeconds = glfwGetTime(); // Temps écoulé depuis l'initialisation de GLFW
+    double currentSeconds = glfwGetTime(); // Temps ecoule depuis l'initialisation de GLFW
 
     elapsedSeconds = currentSeconds - previousSeconds;
 
@@ -69,7 +82,7 @@ bool initOpenGL()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    // Création de la fenêtre
+    // Creation de la fenêtre
     if(gFullScreen) 
     {
         GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
@@ -86,7 +99,7 @@ bool initOpenGL()
 
     if(gWindow == NULL)
     {
-        std::cout << "Erreur lors de la création de la fenêtre GLFW" << std::endl;
+        std::cout << "Erreur lors de la creation de la fenêtre GLFW" << std::endl;
         glfwTerminate();
         return false;
     }
@@ -94,7 +107,7 @@ bool initOpenGL()
     // Rendre le contexte OpenGL courant
     glfwMakeContextCurrent(gWindow);
 
-    // Gestion des événements clavier
+    // Gestion des evenements clavier
     glfwSetKeyCallback(gWindow, glfw_onKey);
 
     // Initialisation de GLEW
@@ -113,42 +126,104 @@ bool initOpenGL()
 
 int main()
 {
+    // Initialisation d'OpenGL-------------------------------------
     if(!initOpenGL())
     {
         std::cerr << "Erreur d'initialisation d'OpenGL" << std::endl;
         return -1;
     }
 
-    GLfloat vertices[] = {
-        0.0f, 0.5f, 0.0f, // Sommet haut
-        0.5f, -0.5f, 0.0f,  // Sommet droit
+    // Sommets du triangle-----------------------------------------
+    GLfloat vertices[] = 
+    {
+        0.0f,  0.5f,  0.0f, // Sommet haut
+        0.5f,  -0.5f, 0.0f,  // Sommet droit
         -0.5f, -0.5f, 0.0f  // Sommet gauche
     };
 
-    GLuint vbo;
+    // Creation des buffers----------------------------------------
+    GLuint vbo, vao; // Vertex Buffer Object, Vertex Array Object
 
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glGenBuffers(1, &vbo); // Creation du VBO
+    glBindBuffer(GL_ARRAY_BUFFER, vbo); // Lier le VBO
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Copie des donnees, GL_STATIC_DRAW : utilisation des donnees statiques
 
+    glGenVertexArrays(1, &vao); // Creation du VAO
+    glBindVertexArray(vao); // Lier le VAO
 
-    // Boucle principale
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL); // Position des sommets, 0 : attribut de sommet, 3 : nombre de composantes, 0 : decalage, NULL : pas de decalage
+    glEnableVertexAttribArray(0); // Activation de l'attribut de sommet
+
+    // Creation des shaders----------------------------------------
+    GLint result;
+    GLchar infoLog[512];
+    // Vertex Shader
+    GLuint vs = glCreateShader(GL_VERTEX_SHADER); // Creation du Vertex Shader
+    glShaderSource(vs, 1, &vertexShaderSource, NULL); // Specification du code source, 1 : nombre de chaînes
+    glCompileShader(vs); // Compilation du shader
+
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &result); // Recuperation du statut de compilation
+    if(!result)
+    {
+        glGetShaderInfoLog(vs, sizeof(infoLog), NULL, infoLog); // Recuperation des erreurs
+        std::cout << "Erreur de compilation du Vertex Shader : " << infoLog << std::endl;
+    }
+    
+    // Fragment Shader
+    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER); // Creation du Fragment Shader
+    glShaderSource(fs, 1, &fragmentShaderSource, NULL); // Specification du code source, 1 : nombre de chaînes
+    glCompileShader(fs); // Compilation du shader
+
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &result); // Recuperation du statut de compilation
+    if(!result)
+    {
+        glGetShaderInfoLog(vs, sizeof(infoLog), NULL, infoLog); // Recuperation des erreurs
+        std::cout << "Erreur de compilation du Fragment Shader : " << infoLog << std::endl;
+    }
+    
+    // Programme de shader
+    GLuint shaderProgram = glCreateProgram(); // Creation du programme de shader
+    glAttachShader(shaderProgram, vs); // Attachement du Vertex Shader
+    glAttachShader(shaderProgram, fs); // Attachement du Fragment Shader
+    glLinkProgram(shaderProgram); // Lien du programme
+
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &result); // Recuperation du statut de lien
+    if(!result)
+    {
+        glGetProgramInfoLog(shaderProgram, sizeof(infoLog), NULL, infoLog); // Recuperation des erreurs
+        std::cout << "Erreur de lien du programme de shader : " << infoLog << std::endl;
+    }
+    
+    glDeleteShader(vs); // Suppression du Vertex Shader
+    glDeleteShader(fs); // Suppression du Fragment Shader
+
+    // Boucle principale-------------------------------------------
     while(glfwWindowShouldClose(gWindow) == false)
     {
         // Calcul des FPS
         showFPS(gWindow);
 
-        // Gestion des événements
+        // Gestion des evenements
         glfwPollEvents();
 
         // Effacement de la fenêtre
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // Dessin
+        glUseProgram(shaderProgram); // Activation du programme de shader
+        glBindVertexArray(vao); // Lier le VAO
+        glDrawArrays(GL_TRIANGLES, 0, 3); // Dessin du triangle, GL_TRIANGLES : type de primitive, 0 : indice de depart, 3 : nombre de sommets
+        glBindVertexArray(0); // Desactivation du VAO
+
         // Echange des buffers
         glfwSwapBuffers(gWindow);
     }
 
-    glfwTerminate();
+    // Nettoyage---------------------------------------------------
+    glDeleteProgram(shaderProgram); // Suppression du programme de shader
+    glDeleteVertexArrays(1, &vao); // Suppression du VAO
+    glDeleteBuffers(1, &vbo); // Suppression du VBO
+    glfwTerminate(); // Fermeture de GLFW
 
     return 0;
 }
