@@ -15,14 +15,20 @@ bool gFullScreen = false;
 const GLchar* vertexShaderSource = // Vertex Shader
     "#version 330 core\n"
     "layout (location = 0) in vec3 position;" // Position du sommet
+    "layout (location = 1) in vec3 color;" // Couleur du sommet
+    "out vec3 vertColor;" // Couleur du sommet
     "void main()"
-    "{ gl_Position = vec4(position.x, position.y, position.z, 1.0);}"; // Position du sommet
+    "{"
+        "vertColor = color;" // Couleur du sommet
+        "gl_Position = vec4(position.x, position.y, position.z, 1.0);" // Position du sommet
+    "}"; 
 
 const GLchar* fragmentShaderSource = // Fragment Shader
     "#version 330 core\n"
+    "in vec3 vertColor;" // Couleur du sommet
     "out vec4 fragColor;" // Couleur du fragment
     "void main()" 
-    "{ fragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);}"; // Couleur orange
+    "{ fragColor = vec4(vertColor, 1.0f);}"; // Couleur orange
 
 // Fonction de rappel pour la gestion des evenements clavier
 void glfw_onKey(GLFWwindow* gWindow, int key, int scancode, int action, int mode)
@@ -134,25 +140,43 @@ int main()
     }
 
     // Sommets du triangle-----------------------------------------
-    GLfloat vertices[] = 
-    {
+    GLfloat vertPosition[] = 
+    {   // Position des sommets 
         0.0f,  0.5f,  0.0f, // Sommet haut
-        0.5f,  -0.5f, 0.0f,  // Sommet droit
-        -0.5f, -0.5f, 0.0f  // Sommet gauche
+        0.5f,  -0.5f, 0.0f, // Sommet droit
+        -0.5f, -0.5f, 0.0f, // Sommet gauche
+    };
+
+    GLfloat vertColor[] = 
+    {   // Couleur des sommets
+        1.0f, 0.0f, 0.0f, // Sommet haut
+        0.0f, 1.0f, 0.0f, // Sommet droit
+        0.0f, 0.0f, 1.0f  // Sommet gauche
     };
 
     // Creation des buffers----------------------------------------
-    GLuint vbo, vao; // Vertex Buffer Object, Vertex Array Object
+    GLuint vbo, vbo2, vao; // Vertex Buffer Object, Vertex Array Object
 
     glGenBuffers(1, &vbo); // Creation du VBO
     glBindBuffer(GL_ARRAY_BUFFER, vbo); // Lier le VBO
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Copie des donnees, GL_STATIC_DRAW : utilisation des donnees statiques
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertPosition), vertPosition, GL_STATIC_DRAW); // Copie des donnees, GL_STATIC_DRAW : utilisation des donnees statiques
+
+    glGenBuffers(1, &vbo2); // Creation du VBO
+    glBindBuffer(GL_ARRAY_BUFFER, vbo2); // Lier le VBO
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertColor), vertColor, GL_STATIC_DRAW); // Copie des donnees, GL_STATIC_DRAW : utilisation des donnees statiques
 
     glGenVertexArrays(1, &vao); // Creation du VAO
     glBindVertexArray(vao); // Lier le VAO
 
+    // Position des sommets
+    glBindBuffer(GL_ARRAY_BUFFER, vbo); // Lier le VBO
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL); // Position des sommets, 0 : attribut de sommet, 3 : nombre de composantes, 0 : decalage, NULL : pas de decalage
     glEnableVertexAttribArray(0); // Activation de l'attribut de sommet
+
+    // Couleur des sommets
+    glBindBuffer(GL_ARRAY_BUFFER, vbo2); // Lier le VBO
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL); // Couleur des sommets, 1 : attribut de sommet, 3 : nombre de composantes, 0 : decalage, NULL : pas de decalage
+    glEnableVertexAttribArray(1); // Activation de l'attribut de sommet
 
     // Creation des shaders----------------------------------------
     GLint result;
