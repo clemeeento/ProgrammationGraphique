@@ -4,7 +4,7 @@
 #include <sstream>
 
 
-ShaderProgram::ShaderProgram() : mHandle(0) // Constructeur
+ShaderProgram::ShaderProgram() : mHandle(0)
 {
     
 }
@@ -42,9 +42,12 @@ bool ShaderProgram::loadShaders(const char* vsFilename, const char* fsFilename)
     glAttachShader(mHandle, vs); // Attachement du Vertex Shader
     glAttachShader(mHandle, fs); // Attachement du Fragment Shader
     glLinkProgram(mHandle); // Lien du programme de shader
+    checkCompileErrors(mHandle, ShaderType::PROGRAM); // Verifier les erreurs de liaison
     
     glDeleteShader(vs); // Suppression du Vertex Shader
     glDeleteShader(fs); // Suppression du Fragment Shader
+
+    mUniformLocations.clear(); // Initialisation des uniformes
 
     return true;
 }
@@ -83,7 +86,8 @@ string ShaderProgram::fileToString(const string& filename)
     return ss.str();
 }
 
-void ShaderProgram::checkCompileErrors(GLuint object, ShaderType type) // Verifier les erreurs de compilation
+// Verifier les erreurs de compilation
+void ShaderProgram::checkCompileErrors(GLuint object, ShaderType type) 
 {
     int status = 0;
 
@@ -118,4 +122,38 @@ void ShaderProgram::checkCompileErrors(GLuint object, ShaderType type) // Verifi
             std::cerr << "Erreur de compilation du shader : " << errorLog << std::endl;
         }
     }
+}
+
+// Obtenir l'emplacement d'un uniforme
+GLint ShaderProgram::getUniformLocation(const GLchar* name)
+{
+    std::map<string, GLuint>::iterator it = mUniformLocations.find(name); // Recherche de l'uniforme
+
+    if(it == mUniformLocations.end())
+    {
+        mUniformLocations[name] = glGetUniformLocation(mHandle, name); // Obtenir l'emplacement de l'uniforme
+    }
+
+    return mUniformLocations[name];
+}
+
+// Definir un uniform de type vec2
+void ShaderProgram::setUniform(const GLchar* name, const glm::vec2& v)
+{
+    GLint localisation = getUniformLocation(name); // Obtenir l'emplacement de l'uniforme
+    glUniform2f(localisation, v.x, v.y); // Definir l'uniforme
+}
+
+// Definir un uniform de type vec3
+void ShaderProgram::setUniform(const GLchar* name, const glm::vec3& v)
+{
+    GLint localisation = getUniformLocation(name); // Obtenir l'emplacement de l'uniforme
+    glUniform3f(localisation, v.x, v.y, v.z); // Definir l'uniforme
+} 
+
+// Definir un uniform de type vec4
+void ShaderProgram::setUniform(const GLchar* name, const glm::vec4& v)
+{
+    GLint localisation = getUniformLocation(name); // Obtenir l'emplacement de l'uniforme
+    glUniform4f(localisation, v.x, v.y, v.z, v.w); // Definir l'uniforme
 }

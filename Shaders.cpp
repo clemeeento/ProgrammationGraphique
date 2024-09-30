@@ -206,6 +206,16 @@ int main()
 
         // Dessin
         shaderProgram.use(); // Utiliser le programme de shader
+        GLfloat time = glfwGetTime(); // Temps ecoule depuis l'initialisation de GLFW
+
+        GLfloat blueColor = (sin(time) / 2) + 0.5f; // Variation de la couleur bleue,
+        glm::vec2 pos;
+        pos.x = sin(time) / 2;
+        pos.y = cos(time) / 2;
+        
+        shaderProgram.setUniform("posOffset", pos); // Definir l'offset
+        shaderProgram.setUniform("vertColor", glm::vec4(0.0f, 0.0f, blueColor, 1.0f)); // Definir la couleur
+
         glBindVertexArray(vao); // Lier le VAO
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // Dessin des triangles, 6 : nombre d'indices, 0 : decalage
         glBindVertexArray(0); // Desactivation du VAO
