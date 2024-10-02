@@ -34,7 +34,7 @@ bool ShaderProgram::loadShaders(const char* vsFilename, const char* fsFilename)
     checkCompileErrors(vs, ShaderType::VERTEX); // Verifier les erreurs de compilation
     
     glCompileShader(fs); // Compilation du shader
-    checkCompileErrors(vs, ShaderType::FRAGMENT); // Verifier les erreurs de compilation
+    checkCompileErrors(fs, ShaderType::FRAGMENT); // Verifier les erreurs de compilation
     
     
     // Programme de shader
