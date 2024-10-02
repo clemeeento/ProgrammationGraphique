@@ -15,8 +15,7 @@ GLFWwindow* gWindow = NULL;
 bool gFullScreen = false;
 bool gWireframe = false;
 const std::string texture1Filename = "Textures/woodcrate_diffuse.jpg";
-const std::string texture2Filename = "Textures/woodcrate_crate.jpg";
-
+//const std::string texture2Filename = "Textures/wooden_crate.jpg";
 
 // Fonction de rappel pour la gestion des evenements clavier
 void glfw_onKey(GLFWwindow* gWindow, int key, int scancode, int action, int mode)
@@ -197,7 +196,7 @@ int main()
     // Chargement des textures-------------------------------------
     Texture2D texture1, texture2;
     texture1.loadTexture(texture1Filename, true);
-    texture2.loadTexture(texture2Filename, true);
+    //texture2.loadTexture(texture2Filename, true);
 
     // Boucle principale-------------------------------------------
     while(glfwWindowShouldClose(gWindow) == false)
