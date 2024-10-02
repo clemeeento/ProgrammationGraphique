@@ -6,6 +6,7 @@ g++ FirstTriangle.cpp -o FirstTriangle -lopengl32 -lglew32 -lglfw3 -lgdi32
 g++ FirstTriangleBis.cpp -o FirstTriangleBis -lopengl32 -lglew32 -lglfw3 -lgdi32  
 g++ Shaders.cpp ShaderProgram.cpp -o Shaders -lopengl32 -lglew32 -lglfw3 -lgdi32  
 g++ TextureMapping.cpp ShaderProgram.cpp Texture2D.cpp -o TextureMapping -lopengl32 -lglew32 -lglfw3 -lgdi32
+g++ VirtualCamera.cpp ShaderProgram.cpp Texture2D.cpp -o VirtualCamera -lopengl32 -lglew32 -lglfw3 -lgdi32
 
 ## Vidéos
 Vidéo 1 : Introduction 
@@ -22,7 +23,8 @@ Vidéo 11 : Basic Lightning II
 Vidéo 12 : Basic Lightning III  
   
 **Avancement**  
-Vidéo 5/12 : fini  
+Vidéo 7/12 : fini  
 Revoir Vertex Buffer de la vidéo 3  
 Voir 49 min, 52 min de la vidéo 4  
-Voir 3 min, 4 min, 22 min à 32 min, 35 min de la vidéo 5  
+Voir 3 min, 4 min, 22 min à 32 min, 35 min de la vidéo 5 
+Voir 15 min à 18 min de la vidéo 7 
