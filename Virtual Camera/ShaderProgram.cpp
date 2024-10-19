@@ -5,9 +5,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-ShaderProgram::ShaderProgram() : mHandle(0)
+ShaderProgram::ShaderProgram()
 {
-    
+    mHandle = 0;
 }
 
 ShaderProgram::~ShaderProgram()
