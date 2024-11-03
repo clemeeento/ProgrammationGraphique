@@ -24,7 +24,7 @@ Vidéo 11 : Basic Lightning II
 Vidéo 12 : Basic Lightning III  
   
 **Avancement**  
-Vidéo 8/12 : 25 min
+Vidéo 8/12 : fini
 Revoir Vertex Buffer de la vidéo 3  
 Voir 49 min, 52 min de la vidéo 4  
 Voir 3 min, 4 min, 22 min à 32 min, 35 min de la vidéo 5 

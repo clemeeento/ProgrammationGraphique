@@ -10,21 +10,19 @@
 
 #define GLEW_STATIC
 
-const char* APP_TITLE = "OpenGL Shaders";
+const char* APP_TITLE = "OpenGL Virtual";
 int gWindowWidth = 1024;
 int gWindowHeight = 768;
 GLFWwindow* gWindow = NULL;
 bool gFullScreen = false;
 bool gWireframe = false;
 const std::string texture1Filename = "Textures/wooden_crate.jpg";
+const std::string texture2Filename = "Textures/grid.jpg";
 
-float gCubeAngle = 0.0f;
-
-OrbitCamera orbitCamera;
-float gYaw = 0.0f;
-float gPitch = 0.0f;
-float gRadius = 10.0f;
-const float MOUSE_SENSITIVITY = 0.25f;
+FPSCamera fpsCamera(glm::vec3(0.0f, 0.0f, 5.0f));
+const double ZOOM_SENSITIVITY = -3.0;
+const float MOVE_SPEED = 5.0;
+const float MOUSE_SENSITIVITY = 0.1f;
 
 
 // Fonction de rappel pour la gestion des evenements clavier
@@ -36,7 +34,7 @@ void glfw_onKey(GLFWwindow* gWindow, int key, int scancode, int action, int mode
         glfwSetWindowShouldClose(gWindow, GL_TRUE);
     }
 
-    if(key == GLFW_KEY_W && action == GLFW_PRESS)
+    if(key == GLFW_KEY_Q && action == GLFW_PRESS)
     {
         gWireframe = !gWireframe;
         if(gWireframe)
@@ -61,23 +59,85 @@ void glfw_onFramebufferSize(GLFWwindow* gWindow, int width, int height)
 // Fonction de rappel pour la gestion de la souris
 void glfw_onMouseMove(GLFWwindow* gWindow, double posX, double posY)
 {
-    static glm::vec2 lastMousePos = glm::vec2(0, 0);
+    // static glm::vec2 lastMousePos = glm::vec2(0, 0);
 
-    if(glfwGetMouseButton(gWindow, GLFW_MOUSE_BUTTON_LEFT) == 1)
+    // // Rotation de la caméra
+    // if(glfwGetMouseButton(gWindow, GLFW_MOUSE_BUTTON_LEFT) == 1)
+    // {
+    //     gYaw = gYaw - ((float)posX - lastMousePos.x) * MOUSE_SENSITIVITY;
+    //     gPitch = gPitch + ((float)posY - lastMousePos.y) * MOUSE_SENSITIVITY;
+    // }
+
+    // // Zoom
+    // if(glfwGetMouseButton(gWindow, GLFW_MOUSE_BUTTON_RIGHT) == 1)
+    // {
+    //     float dx = 0.01f * ((float)posX - lastMousePos.x);
+    //     float dy = 0.01f * ((float)posY - lastMousePos.y);
+    //     gRadius = gRadius + dx - dy;
+    // }
+
+    // lastMousePos.x = (float)posX;
+    // lastMousePos.y = (float)posY;
+}
+
+// Fonction de rappel pour la gestion de la molette de la souris
+void glfw_onMouseScroll(GLFWwindow* gWindow, double deltaX, double deltaY)
+{
+    // Zoom
+    double fov = fpsCamera.getFOV() + deltaY * ZOOM_SENSITIVITY;
+
+    // Limiter le champ de vision
+    fov = glm::clamp(fov, 1.0, 120.0);
+
+    // Definir le champ de vision
+    fpsCamera.setFOV((float)fov);
+}
+
+// Fonction de mise à jour / Deplacement de la camera
+void update(double elapsedTime)
+{
+    // Orientation de la caméra
+    double mouseX, mouseY;
+
+    // Récupérer la position de la souris
+    glfwGetCursorPos(gWindow, &mouseX, &mouseY);
+
+    // Rotation de la caméra de la différence de position de la souris depuis le centre de la fenêtre. Multiplier par la sensibilité de la souris
+    fpsCamera.rotate((float)(gWindowWidth / 2 - mouseX) * MOUSE_SENSITIVITY, (float)(gWindowHeight / 2 - mouseY) * MOUSE_SENSITIVITY);
+
+    // Réinitialiser la position de la souris au centre de la fenêtre
+    glfwSetCursorPos(gWindow, gWindowWidth / 2.0, gWindowHeight / 2.0);
+
+    // Deplacement de la camera
+    // Avant / Arrière
+    if(glfwGetKey(gWindow, GLFW_KEY_W) == GLFW_PRESS)
     {
-        gYaw = gYaw - ((float)posX - lastMousePos.x) * MOUSE_SENSITIVITY;
-        gPitch = gPitch + ((float)posY - lastMousePos.y) * MOUSE_SENSITIVITY;
+        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getLook());
+    }
+    else if(glfwGetKey(gWindow, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getLook());
     }
 
-    if(glfwGetMouseButton(gWindow, GLFW_MOUSE_BUTTON_RIGHT) == 1)
+    // Gauche / Droite
+    if(glfwGetKey(gWindow, GLFW_KEY_A) == GLFW_PRESS)
     {
-        float dx = 0.01f * ((float)posX - lastMousePos.x);
-        float dy = 0.01f * ((float)posY - lastMousePos.y);
-        gRadius = gRadius + dx - dy;
+        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getRight());
+    }
+    else if(glfwGetKey(gWindow, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getRight());
     }
 
-    lastMousePos.x = (float)posX;
-    lastMousePos.y = (float)posY;
+    // Haut / Bas
+    if(glfwGetKey(gWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getUp());
+    }
+    else if(glfwGetKey(gWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    {
+        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getUp());
+    }
 }
 
 // Fonction pour afficher les FPS
@@ -159,6 +219,13 @@ bool initOpenGL()
     // Gestion des evenements de la souris
     glfwSetCursorPosCallback(gWindow, glfw_onMouseMove);
 
+    // Gestion de la molette de la souris
+    glfwSetScrollCallback(gWindow, glfw_onMouseScroll);
+
+    // Cacher et saisir le curseur, mouvement illimité
+    glfwSetInputMode(gWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPos(gWindow, gWindowWidth / 2.0, gWindowHeight / 2.0);
+
     // Initialisation de GLEW
     glewExperimental = GL_TRUE;
     if(glewInit() != GLEW_OK)
@@ -238,21 +305,10 @@ int main()
     };
 
     glm::vec3 cubePose = glm::vec3(0.0f, 0.0f, -5.0f); // Position du cube
-
+    glm::vec3 floorPos = glm::vec3(0.0f, -1.0f, 0.0f); // Position du sol
 
     // Creation des buffers----------------------------------------
     GLuint vbo, vao; // Vertex Buffer Object, Vertex Array Object
-
-    /*
-        glVetexAttribPointer : Spécifie l'emplacement et la structure des données du tableau de sommets
-        glVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* pointer);
-        index : Spécifie l'index de l'attribut de sommet
-        size : Spécifie le nombre de composantes par attribut de sommet
-        type : Spécifie le type des données
-        normalized : Spécifie si les données doivent être normalisées
-        stride : Spécifie le décalage entre les attributs de sommet
-        pointer : Spécifie un pointeur vers le premier composant de la première valeur de l'attribut de sommet dans le tableau de sommets
-    */
 
     glGenBuffers(1, &vbo); // Creation du VBO
     glBindBuffer(GL_ARRAY_BUFFER, vbo); // Lier le VBO
@@ -278,6 +334,9 @@ int main()
     Texture2D texture1;
     texture1.loadTexture(texture1Filename, true);
 
+    Texture2D texture2;
+    texture2.loadTexture(texture2Filename, true);
+
 
     float cubeAngle = 0.0f; // Angle de rotation
     double lastTime = glfwGetTime(); // Temps écoulé depuis l'initialisation de GLFW
@@ -294,30 +353,29 @@ int main()
         // Gestion des evenements------------------------------
         glfwPollEvents();
 
+        // Mise à jour-----------------------------------------
+        update(deltaTime);
+
         // Effacement de la fenêtre----------------------------
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //Dessin-----------------------------------------------
-        // Lier les textures
+
+        // Dessin du cube
+        // Lier la texture
         texture1.bind(0);
 
-
         // Matrices
-        // Initialisation des matrices
-        glm::mat4 model = glm::mat4(1.0f);  // Matrice identité
-        glm::mat4 view = glm::mat4(1.0f);   // Matrice identité
-        glm::mat4 projection = glm::mat4(1.0f);  // Matrice identité
-
-        orbitCamera.setLookAt(cubePose); // Definir le point cible
-        orbitCamera.rotate(gYaw, gPitch); // Rotation de la caméra
-        orbitCamera.setRadius(gRadius); // Definir le rayon
+        // Initialisation des matrices (identité)
+        glm::mat4 model = glm::mat4(1.0f);  
+        glm::mat4 view = glm::mat4(1.0f);   
+        glm::mat4 projection = glm::mat4(1.0f); 
 
         model = glm::translate(model, cubePose); // Translation du cube
 
-        view = orbitCamera.getViewMatrix(); // Matrice de vue
+        view = fpsCamera.getViewMatrix(); // Matrice de vue
 
-        projection = glm::perspective(glm::radians(45.0f), (float)gWindowWidth / (float)gWindowHeight, 0.1f, 100.0f); // Matrice de projection
-
+        projection = glm::perspective(glm::radians(fpsCamera.getFOV()), (float)gWindowWidth / (float)gWindowHeight, 0.1f, 100.0f); // Matrice de projection
 
         // Utiliser le programme de shader
         shaderProgram.use(); 
@@ -326,11 +384,22 @@ int main()
         shaderProgram.setUniform("model", model); // Matrice de modèle
         shaderProgram.setUniform("view", view); // Matrice de vue
         shaderProgram.setUniform("projection", projection); // Matrice de projection
-        
-        //glUniform1i(glGetUniformLocation(shaderProgram.getProgram(), "myTexture1"), 0);
 
         glBindVertexArray(vao); // Lier le VAO
         glDrawArrays(GL_TRIANGLES, 0, 36); // Dessin du cube
+
+
+        // Dessin du sol
+        // Lier la texture
+        texture2.bind(0);
+        
+        // Matrices
+        model = glm::translate(model, floorPos) * glm::scale(model, glm::vec3(10.0f, 0.01f, 10.0f));
+
+        shaderProgram.setUniform("model", model); // Matrice de modèle
+
+        glDrawArrays(GL_TRIANGLES, 0, 36); // Dessin du sol
+
         glBindVertexArray(0); // Desactivation du VAO
 
         // Echange des buffers---------------------------------
