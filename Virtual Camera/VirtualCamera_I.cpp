@@ -9,7 +9,7 @@
 
 #define GLEW_STATIC
 
-const char* APP_TITLE = "OpenGL Shaders";
+const char* APP_TITLE = "OpenGL Virtual Camrea I";
 int gWindowWidth = 1024;
 int gWindowHeight = 768;
 GLFWwindow* gWindow = NULL;

@@ -8,7 +8,7 @@
 
 #define GLEW_STATIC
 
-const char* APP_TITLE = "OpenGL Shaders";
+const char* APP_TITLE = "OpenGL Texture Mapping";
 const int gWindowWidth = 800;
 const int gWindowHeight = 600;
 GLFWwindow* gWindow = NULL;
