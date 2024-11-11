@@ -141,7 +141,7 @@ void main()
 	vec3 ambient = spotLight.ambient * material.ambient * vec3(texture(material.diffuseMap, TexCoord));
 	vec3 outColor = vec3(0.0f);	
 
-	outColor += calcDirectionalLightColor(sunLight, normal, viewDir);
+	outColor = outColor + calcDirectionalLightColor(sunLight, normal, viewDir);
 
    for(int i = 0; i < MAX_POINT_LIGHTS; i = i + 1)
    {

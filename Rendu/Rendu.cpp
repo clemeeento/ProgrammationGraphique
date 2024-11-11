@@ -20,12 +20,13 @@ GLFWwindow* gWindow = NULL;
 bool gFullScreen = false;
 bool gWireframe = false;
 int gFlashlightOn = true;
-glm::vec4 gClearColor(0.06f, 0.06f, 0.07f, 1.0f);
+glm::vec4 gClearColor(0.392f, 0.667f, 0.922f, 1.0f);
 
 FPSCamera fpsCamera(glm::vec3(0.0f, 3.5f, 10.0f));
 const double ZOOM_SENSITIVITY = -3.0;
 const float MOVE_SPEED = 30.0;
 const float MOUSE_SENSITIVITY = 0.1f;
+const float GROUND_HEIGHT = 2.0f; // Hauteur du sol
 
 
 // Fonction de rappel pour la gestion des evenements clavier
@@ -123,6 +124,14 @@ void update(double elapsedTime)
     {
         fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getUp());
     }
+
+    // Vérification de la hauteur pour empêcher de traverser le sol
+    if(fpsCamera.getPosition().y < GROUND_HEIGHT)
+    {
+        glm::vec3 pos = fpsCamera.getPosition();
+        pos.y = GROUND_HEIGHT;  // Contraindre la hauteur au-dessus du sol
+        fpsCamera.setPosition(pos);
+    }
 }
 
 // Fonction pour afficher les FPS
@@ -197,7 +206,7 @@ bool initOpenGL()
     glfwMakeContextCurrent(gWindow);
 
     // Désactive la V-Sync pour ne pas limiter les FPS
-    glfwSwapInterval(0);
+    //glfwSwapInterval(0);
 
     // Gestion des evenements clavier
     glfwSetKeyCallback(gWindow, glfw_onKey);
@@ -228,6 +237,44 @@ bool initOpenGL()
     return true;
 }
 
+// Fonction les shaders d'un objet
+void materialShaders(ShaderProgram lightingShader)
+{
+    lightingShader.setUniform("material.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
+    lightingShader.setUniformSampler("material.diffuseMap", 0);
+    lightingShader.setUniform("material.specular", glm::vec3(0.8f, 0.8f, 0.8f));
+    lightingShader.setUniform("material.shininess", 32.0f);
+}
+
+// Fonction pour la lampe torche
+void spotlightShaders(ShaderProgram lightingShader, glm::vec3 spotlightPos)
+{
+   lightingShader.setUniform("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+    lightingShader.setUniform("spotLight.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+    lightingShader.setUniform("spotLight.specular", glm::vec3(2.0f, 2.0f, 2.0f));
+    lightingShader.setUniform("spotLight.position", spotlightPos);
+    lightingShader.setUniform("spotLight.direction", fpsCamera.getLook());
+    lightingShader.setUniform("spotLight.cosInnerCone", glm::cos(glm::radians(7.5f)));
+    lightingShader.setUniform("spotLight.cosOuterCone", glm::cos(glm::radians(15.0f)));
+    lightingShader.setUniform("spotLight.constant", 1.0f);
+    lightingShader.setUniform("spotLight.linear", 0.0045f);
+    lightingShader.setUniform("spotLight.exponent", 0.00075f);
+    lightingShader.setUniform("spotLight.on", gFlashlightOn);
+}
+
+// void pointLightShaders(ShaderProgram lightingShader, glm::vec3 pointLightPos[], glm::vec3 colorLight, int numLight)
+// {
+    
+//     lightingShader.setUniform("pointLights[" + std::to_string(numLight) + "].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+//     lightingShader.setUniform("pointLights[" + std::to_string(numLight) + "].diffuse", colorLight);
+//     lightingShader.setUniform("pointLights[" + std::to_string(numLight) + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+//     lightingShader.setUniform("pointLights[" + std::to_string(numLight) + "].position", pointLightPos[numLight]);
+//     lightingShader.setUniform("pointLights[" + std::to_string(numLight) + "].constant", 1.0f);
+//     lightingShader.setUniform("pointLights[" + std::to_string(numLight) + "].linear", 0.22f);
+//     lightingShader.setUniform("pointLights[" + std::to_string(numLight) + "].exponent", 0.20f);
+    
+// }
+
 int main()
 {
     // Initialisation d'OpenGL-------------------------------------
@@ -237,67 +284,42 @@ int main()
         return -1;
     }
 
+    // Variables pour la couleur de fond jour et nuit
+    glm::vec4 dayColor(0.39f, 0.66f, 0.92f, 1.0f); // Bleu clair pour le jour
+    glm::vec4 nightColor(0.0f, 0.0f, 0.0f, 1.0f);  // Noir pour la nuit
+    float sunAngle = 0.0f;  // Angle initial du "soleil"
+
     // Creation des shaders----------------------------------------
     ShaderProgram lightingShader;
 	lightingShader.loadShaders("Shaders/lighting.vert", "Shaders/lighting.frag"); // Charger les shaders
-
+    
     // Mesh et texture---------------------------------------------
     // Creation du mesh
-    const int numModels = 9;
+    const int numModels = 6;
     Mesh mesh[numModels];
     Texture2D texture[numModels];
 
     // Charger les objets
-    mesh[0].loadOBJ("models/barrel.obj");
-	mesh[1].loadOBJ("models/woodcrate.obj");
-	mesh[2].loadOBJ("models/robot.obj");
-	mesh[3].loadOBJ("models/floor.obj");
-	mesh[4].loadOBJ("models/bowling_pin.obj");
-	mesh[5].loadOBJ("models/bunny.obj");
-	mesh[6].loadOBJ("models/lampPost.obj");
-	mesh[7].loadOBJ("models/lampPost.obj");
-	mesh[8].loadOBJ("models/lampPost.obj");
+    mesh[0].loadOBJ("Models/Floor.obj"); // Sol
+    
 
     // Charger les textures
-    texture[0].loadTexture("textures/barrel_diffuse.png", true);
-	texture[1].loadTexture("textures/woodcrate_diffuse.jpg", true);
-	texture[2].loadTexture("textures/robot_diffuse.jpg", true);
-	texture[3].loadTexture("textures/tile_floor.jpg", true);
-	texture[4].loadTexture("textures/AMF.tga", true);
-	texture[5].loadTexture("textures/bunny_diffuse.jpg", true);
-	texture[6].loadTexture("textures/lamp_post_diffuse.png", true);
-	texture[7].loadTexture("textures/lamp_post_diffuse.png", true);
-	texture[8].loadTexture("textures/lamp_post_diffuse.png", true);
-
+    texture[0].loadTexture("Textures/Floor.jpg", true); // Sol
+   
     // Position des modeles----------------------------------------
     glm::vec3 modelPosition[] = 
     {
-        glm::vec3(-3.5f, 0.0f, 0.0f),	// Barrel
-		glm::vec3(3.5f, 0.0f, 0.0f),	// Crate
-		glm::vec3(0.0f, 0.0f, -2.0f),	// Robot
-		glm::vec3(0.0f, 0.0f, 0.0f),	// Floor
-		glm::vec3(0.0f, 0.0f, 2.0f),	// Pin
-		glm::vec3(-2.0f, 0.0f, 2.0f),	// Bunny
-		glm::vec3(-5.5f, 0.0f, 0.0f),	// Lamp post 1
-		glm::vec3(0.0f, 0.0f, 0.0f),	// Lamp post 2
-		glm::vec3(5.5f, 0.0f, 0.0f)		// Lamp post 2
+        glm::vec3(0.0f, 0.0f, 0.0f)	// Sol
+    
     };
 
     // Mise à l'échelle des modeles--------------------------------
     glm::vec3 modelScale[] = 
     {
-        glm::vec3(1.0f, 1.0f, 1.0f),	// Barrel
-		glm::vec3(1.0f, 1.0f, 1.0f),	// Crate
-		glm::vec3(1.0f, 1.0f, 1.0f),	// Robot
-		glm::vec3(10.0f, 1.0f, 10.0f),	// Floor
-		glm::vec3(0.1f, 0.1f, 0.1f),	// Pin
-		glm::vec3(0.7f, 0.7f, 0.7f),	// Bunny
-		glm::vec3(1.0f, 1.0f, 1.0f),	// Lamp post 1
-		glm::vec3(1.0f, 1.0f, 1.0f),	// Lamp post 2
-		glm::vec3(1.0f, 1.0f, 1.0f)		// Lamp post 3
+        glm::vec3(10.0f, 1.0f, 10.0f)	// Sol
     };
 
-    // Position des lumieres---------------------------------------
+    //Position des lumieres---------------------------------------
     glm::vec3 pointLightPos[3] = 
     {
 		glm::vec3(-5.0f, 3.8f, 0.0f),
@@ -325,6 +347,17 @@ int main()
 
         // Effacement de la fenêtre----------------------------
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        // Mise à jour de l'angle et direction du soleil
+        sunAngle = sunAngle + deltaTime * 0.5f;  // Ajustez la vitesse de rotation ici
+        glm::vec3 sunDirection = glm::vec3(cos(sunAngle), sin(sunAngle), -0.3f); // Direction changeant au fil du temps
+
+        // Ajustement de la couleur de fond selon la position du soleil
+        float nightFactor = glm::clamp((2.0f + sunDirection.y) / 2.0f, 0.0f, 1.0f); // Valeur entre 0 (jour) et 1 (nuit)
+        glm::vec4 currentBackgroundColor = glm::mix(dayColor, nightColor, nightFactor);
+
+        // Appliquer la couleur de fond
+        glClearColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b, currentBackgroundColor.a);
 
         //Dessin-----------------------------------------------
         // Matrices
@@ -355,13 +388,13 @@ int main()
 		lightingShader.setUniform("viewPos", viewPos);
 
        // Lumiere directionnelle
-		lightingShader.setUniform("sunLight.direction", glm::vec3(0.0f, -0.9f, -0.17f));
-		lightingShader.setUniform("sunLight.diffuse", glm::vec3(0.1f, 0.1f, 0.1f));	 // Sombre
-		lightingShader.setUniform("sunLight.specular", glm::vec3(0.1f, 0.1f, 0.1f));
+		lightingShader.setUniform("sunLight.direction", sunDirection);
+        lightingShader.setUniform("sunLight.diffuse", glm::vec3(1.0f, 1.0f, 0.9f));  // Lumière du soleil jaune
+        lightingShader.setUniform("sunLight.specular", glm::vec3(0.2f, 0.2f, 0.2f));
 
 		// Point de lumiere 1
 		lightingShader.setUniform("pointLights[0].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		lightingShader.setUniform("pointLights[0].diffuse", glm::vec3(0.0f, 1.0f, 0.1f));	// Lumiere verte
+		lightingShader.setUniform("pointLights[0].diffuse", glm::vec3(0.0f, 1.0f, 0.0f));	// Lumiere verte
 		lightingShader.setUniform("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		lightingShader.setUniform("pointLights[0].position", pointLightPos[0]);
 		lightingShader.setUniform("pointLights[0].constant", 1.0f);
@@ -370,7 +403,7 @@ int main()
 
 		// Point de lumiere 2
 		lightingShader.setUniform("pointLights[1].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		lightingShader.setUniform("pointLights[1].diffuse", glm::vec3(1.0f, 0.1f, 0.0f));	// Lumiere rouge
+		lightingShader.setUniform("pointLights[1].diffuse", glm::vec3(1.0f, 0.0f, 0.0f));	// Lumiere rouge
 		lightingShader.setUniform("pointLights[1].specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		lightingShader.setUniform("pointLights[1].position", pointLightPos[1]);
 		lightingShader.setUniform("pointLights[1].constant", 1.0f);
@@ -379,7 +412,7 @@ int main()
 
 		// Point de lumiere 3
 		lightingShader.setUniform("pointLights[2].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		lightingShader.setUniform("pointLights[2].diffuse", glm::vec3(0.0f, 0.1f, 1.0f));	// Lumiere bleue
+		lightingShader.setUniform("pointLights[2].diffuse", glm::vec3(0.0f, 0.0f, 1.0f));	// Lumiere bleue
 		lightingShader.setUniform("pointLights[2].specular", glm::vec3(1.0f, 1.0f, 1.0f));
 		lightingShader.setUniform("pointLights[2].position", pointLightPos[2]);
 		lightingShader.setUniform("pointLights[2].constant", 1.0f);
@@ -387,21 +420,8 @@ int main()
 		lightingShader.setUniform("pointLights[2].exponent", 0.20f);
 
 		// Lampe torche
-		glm::vec3 spotlightPos = fpsCamera.getPosition();
-
-		lightingShader.setUniform("spotLight.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
-		lightingShader.setUniform("spotLight.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-		lightingShader.setUniform("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		lightingShader.setUniform("spotLight.position", spotlightPos);
-		lightingShader.setUniform("spotLight.direction", fpsCamera.getLook());
-		lightingShader.setUniform("spotLight.cosInnerCone", glm::cos(glm::radians(15.0f)));
-		lightingShader.setUniform("spotLight.cosOuterCone", glm::cos(glm::radians(20.0f)));
-		lightingShader.setUniform("spotLight.constant", 1.0f);
-		lightingShader.setUniform("spotLight.linear", 0.07f);
-		lightingShader.setUniform("spotLight.exponent", 0.017f);
-		lightingShader.setUniform("spotLight.on", gFlashlightOn);
-
-
+        spotlightShaders(lightingShader, fpsCamera.getPosition());
+		
         // Dessin de la scene
         for(int i = 0; i < numModels; i = i + 1)
         {
@@ -412,11 +432,7 @@ int main()
 
             // Uniforms
             lightingShader.setUniform("model", model);
-            
-            lightingShader.setUniform("material.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
-			lightingShader.setUniformSampler("material.diffuseMap", 0);
-			lightingShader.setUniform("material.specular", glm::vec3(0.8f, 0.8f, 0.8f));
-			lightingShader.setUniform("material.shininess", 32.0f);
+            materialShaders(lightingShader);
 
             // Lier la texture
             texture[i].bind(0);
@@ -427,6 +443,7 @@ int main()
             // Delier la texture
             texture[i].unbind(0);
         }
+
 
         // Echange des buffers---------------------------------
         glfwSwapBuffers(gWindow);
