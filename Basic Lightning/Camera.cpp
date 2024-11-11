@@ -35,6 +35,11 @@ const glm::vec3& Camera::getUp() const
     return mUp;
 }
 
+const glm::vec3& Camera::getPosition() const
+{
+    return mPosition;
+}
+
 
 // FPSCamera-----------------------------------------------------
 
@@ -75,9 +80,9 @@ void FPSCamera::updateCameraVectors()
     glm::vec3 look;
 
     // Calcul du vecteur de direction de la vue en fonction des angles yaw et pitch
-    look.x = cos(mPitch) * sin(mYaw);
-    look.y = sin(mPitch);
-    look.z = cos(mPitch) * cos(mYaw);
+    look.x = cosf(mPitch) * sinf(mYaw);
+    look.y = sinf(mPitch);
+    look.z = cosf(mPitch) * cosf(mYaw);
 
     mLook = glm::normalize(look);
 
@@ -121,7 +126,7 @@ void OrbitCamera::rotate(float yaw, float pitch)
 void OrbitCamera::updateCameraVectors()
 {
     // Conversion des coordonnées sphériques en coordonnées cartésiennes
-    mPosition.x = mTargetPos.x + mRadius * cos(mPitch) * sin(mYaw);
-    mPosition.y = mTargetPos.y + mRadius * sin(mPitch);
-    mPosition.z = mTargetPos.z + mRadius * cos(mPitch) * cos(mYaw);
+    mPosition.x = mTargetPos.x + mRadius * cosf(mPitch) * sinf(mYaw);
+    mPosition.y = mTargetPos.y + mRadius * sinf(mPitch);
+    mPosition.z = mTargetPos.z + mRadius * cosf(mPitch) * cosf(mYaw);
 }

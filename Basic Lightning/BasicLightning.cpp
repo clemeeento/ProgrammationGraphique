@@ -11,7 +11,7 @@
 
 #define GLEW_STATIC
 
-const char* APP_TITLE = "OpenGL Load Objet";
+const char* APP_TITLE = "OpenGL Basic Lightning";
 int gWindowWidth = 1024;
 int gWindowHeight = 768;
 GLFWwindow* gWindow = NULL;
@@ -211,7 +211,8 @@ bool initOpenGL()
     }
 
     // Configuration de l'affichage
-    glClearColor(0.23f, 0.38f, 0.47f, 1.0f); // Couleur de fond
+    //glClearColor(0.23f, 0.38f, 0.47f, 1.0f); // Couleur de fond
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Couleur de fond Noir
     glViewport(0, 0, gWindowWidth, gWindowHeight); // Taille de la fenêtre
     glEnable(GL_DEPTH_TEST); // Activation du test de profondeur
 
@@ -228,15 +229,20 @@ int main()
     }
 
     // Creation des shaders----------------------------------------
-    ShaderProgram shaderProgram; 
-    shaderProgram.loadShaders("Shaders/basic.vert", "Shaders/basic.frag"); // Charger les shaders
+    ShaderProgram lightShader; 
+    lightShader.loadShaders("Shaders/basic.vert", "Shaders/basic.frag"); // Charger les shaders
+
+    ShaderProgram lightningShader; 
+    lightningShader.loadShaders("Shaders/lightning.vert", "Shaders/lightning.frag"); // Charger les shaders
 
     // Position des modeles----------------------------------------
     glm::vec3 modelPositions[] = 
     {
-        glm::vec3(-2.5f, 0.0f, 0.0f),   // Crate
-        glm::vec3(2.5f, 0.0f, 0.0f),    // Woodcrate
+        glm::vec3(-3.5f, 0.0f, 0.0f),   // Crate
+        glm::vec3(3.5f, 0.0f, 0.0f),    // Woodcrate
         glm::vec3(0.0f, 0.0f, -2.0f),    // Robot
+        glm::vec3(0.0f, 0.0f, 2.0f),    // Pin
+        glm::vec3(-2.0f, 0.0f, 2.0f),   // Bunny
         glm::vec3(0.0f, 0.0f, 0.0f)     // Floor
     };
 
@@ -246,12 +252,14 @@ int main()
         glm::vec3(1.0f, 1.0f, 1.0f),    // Crate
         glm::vec3(1.0f, 1.0f, 1.0f),    // Woodcrate
         glm::vec3(1.0f, 1.0f, 1.0f),    // Robot
-        glm::vec3(10.0f, 0.0f, 10.0f)     // Floor
+        glm::vec3(0.1f, 0.1f, 0.1f),    // Pin
+        glm::vec3(0.7f, 0.7f, 0.7f),    // Bunny
+        glm::vec3(10.0f, 1.0f, 10.0f)     // Floor
     };
 
     // Mesh et texture---------------------------------------------
     // Creation du mesh
-    const int numModels = 4;
+    const int numModels = 6;
     Mesh mesh[numModels];
     Texture2D texture[numModels];
 
@@ -259,16 +267,26 @@ int main()
     mesh[0].loadOBJ("Models/crate.obj");
     mesh[1].loadOBJ("Models/woodcrate.obj");
     mesh[2].loadOBJ("Models/robot.obj");
-    mesh[3].loadOBJ("Models/floor.obj");
+    mesh[3].loadOBJ("Models/bowling_pin.obj");
+    mesh[4].loadOBJ("Models/bunny.obj");
+    mesh[5].loadOBJ("Models/floor.obj");
 
     // Charger les textures
     texture[0].loadTexture("Textures/crate.jpg", true);
     texture[1].loadTexture("Textures/woodcrate_diffuse.jpg", true);
     texture[2].loadTexture("Textures/robot_diffuse.jpg", true);
-    texture[3].loadTexture("Textures/tile_floor.jpg", true);
+    texture[3].loadTexture("Textures/AMF.tga", true);
+    texture[4].loadTexture("Textures/bunny_diffuse.jpg", true);
+    texture[5].loadTexture("Textures/tile_floor.jpg", true);
+
+    // Mesh de la lumière-----------------------------------------
+    Mesh lightMesh;
+    lightMesh.loadOBJ("Models/light.obj");
 
 
     double lastTime = glfwGetTime(); // Temps écoulé depuis l'initialisation de GLFW
+
+    float angle = 0.0f; // Angle de rotation de la lumière
 
     // Boucle principale-------------------------------------------
     while(glfwWindowShouldClose(gWindow) == false)
@@ -301,13 +319,33 @@ int main()
         // Matrice de projection
         projection = glm::perspective(glm::radians(fpsCamera.getFOV()), (float)gWindowWidth / (float)gWindowHeight, 0.1f, 100.0f); 
 
+        // Position de la vue
+        glm::vec3 viewPos;
+        viewPos.x = fpsCamera.getPosition().x;
+        viewPos.y = fpsCamera.getPosition().y;
+        viewPos.z = fpsCamera.getPosition().z;
+
+        // Position et couleur de la lumière
+        glm::vec3 lightPos(0.0f, 1.0f, 10.0f);
+        glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
+
+        // Deplacement de la lumière
+        angle = angle + float(deltaTime) * 50.0f;
+        lightPos.x = 8.0f * sinf(glm::radians(angle));
+
         // Utiliser le programme de shader
-        shaderProgram.use(); 
+        lightningShader.use(); 
 
         // Uniforms
-        shaderProgram.setUniform("model", model); // Matrice de modèle
-        shaderProgram.setUniform("view", view); // Matrice de vue
-        shaderProgram.setUniform("projection", projection); // Matrice de projection
+        lightningShader.setUniform("view", view);
+        lightningShader.setUniform("projection", projection);
+        lightningShader.setUniform("viewPos", viewPos);
+
+        lightningShader.setUniform("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+        lightningShader.setUniform("light.diffuse", lightColor);
+        lightningShader.setUniform("light.specular", glm::vec3(1.0f, 0.8f, 0.0f));
+        lightningShader.setUniform("light.position", lightPos);
+
 
         // Dessin des modeles
         for(int i = 0; i < numModels; i = i + 1)
@@ -318,7 +356,12 @@ int main()
             model = glm::scale(model, modelScales[i]);
 
             // Uniforms
-            shaderProgram.setUniform("model", model); // Matrice de modèle
+            lightningShader.setUniform("model", model); // Matrice de modèle
+            lightningShader.setUniform("material.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
+            lightningShader.setUniformSampler("material.diffuseMap", 0);
+            lightningShader.setUniform("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+            lightningShader.setUniform("material.shininess", 32.0f);
+
 
             // Lier la texture
             texture[i].bind(0);
@@ -330,6 +373,19 @@ int main()
             texture[i].unbind(0);
         }
 
+        // Dessin de la lumière
+        model = glm::mat4(1.0f); // Matrice identité pour assurer que toutes transformations précédentes sont annulées
+        model = glm::translate(model, lightPos); // Appliquer la translation de la lumière
+
+        lightShader.use(); // Utiliser le programme de shader
+
+        // Uniforms
+        lightShader.setUniform("lightColor", lightColor);
+        lightShader.setUniform("model", model);
+        lightShader.setUniform("view", view);
+        lightShader.setUniform("projection", projection);
+
+        lightMesh.draw(); // Dessin du mesh de la lumière
 
         // Echange des buffers---------------------------------
         glfwSwapBuffers(gWindow);

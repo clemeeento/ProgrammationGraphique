@@ -28,6 +28,8 @@ public:
     void setUniform(const GLchar* name, const glm::vec3& v); // Definir un uniform de type vec3
     void setUniform(const GLchar* name, const glm::vec4& v); // Definir un uniform de type vec4
     void setUniform(const GLchar* name, const glm::mat4& m); // Definir un uniform de type mat4
+    void setUniform(const GLchar* name, const GLfloat f); // Definir un uniform de type float
+    void setUniformSampler(const GLchar* name, const GLint slot); // Definir un uniform de type sampler2D
 
     GLuint getProgram() const; // Obtenir l'identifiant du programme de shader
 

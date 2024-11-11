@@ -59,6 +59,12 @@ void ShaderProgram::use()
     if(mHandle > 0)
     {
         glUseProgram(mHandle); // Utiliser le programme de shader
+        GLint currentProgram;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+        if (currentProgram != (GLint)mHandle) 
+        {
+            std::cerr << "Erreur : le programme de shader n'a pas ete lie correctement." << std::endl;
+        }
     }
 }
 
@@ -149,6 +155,11 @@ void ShaderProgram::setUniform(const GLchar* name, const glm::vec2& v)
 void ShaderProgram::setUniform(const GLchar* name, const glm::vec3& v)
 {
     GLint localisation = getUniformLocation(name); // Obtenir l'emplacement de l'uniforme
+    if (localisation == -1) 
+    {
+        std::cerr << "Uniform '" << name << "' non trouve dans le shader." << std::endl;
+        return;
+    }
     glUniform3f(localisation, v.x, v.y, v.z); // Definir l'uniforme
 } 
 
@@ -156,6 +167,11 @@ void ShaderProgram::setUniform(const GLchar* name, const glm::vec3& v)
 void ShaderProgram::setUniform(const GLchar* name, const glm::vec4& v)
 {
     GLint localisation = getUniformLocation(name); // Obtenir l'emplacement de l'uniforme
+    if (localisation == -1) 
+    {
+        std::cerr << "Uniform '" << name << "' non trouve dans le shader." << std::endl;
+        return;
+    }
     glUniform4f(localisation, v.x, v.y, v.z, v.w); // Definir l'uniforme
 }
 
@@ -163,7 +179,37 @@ void ShaderProgram::setUniform(const GLchar* name, const glm::vec4& v)
 void ShaderProgram::setUniform(const GLchar* name, const glm::mat4& m)
 {
     GLint localisation = getUniformLocation(name); // Obtenir l'emplacement de l'uniforme
+    if (localisation == -1) 
+    {
+        std::cerr << "Uniform '" << name << "' non trouve dans le shader." << std::endl;
+        return;
+    }
     glUniformMatrix4fv(localisation, 1, GL_FALSE, glm::value_ptr(m)); // Definir l'uniforme
+}
+
+// Definir un uniform de type float
+void ShaderProgram::setUniform(const GLchar* name, const GLfloat f)
+{
+    GLint localisation = getUniformLocation(name); // Obtenir l'emplacement de l'uniforme
+    if (localisation == -1) 
+    {
+        std::cerr << "Uniform '" << name << "' non trouve dans le shader." << std::endl;
+        return;
+    }
+    glUniform1f(localisation, f); // Definir l'uniforme
+}
+
+// Definir un uniform de type sampler2D
+void ShaderProgram::setUniformSampler(const GLchar* name, const GLint slot)
+{
+    glActiveTexture(GL_TEXTURE0 + slot); // Activer la texture
+    GLint localisation = getUniformLocation(name); // Obtenir l'emplacement de l'uniforme
+    if (localisation == -1) 
+    {
+        std::cerr << "Uniform '" << name << "' non trouve dans le shader." << std::endl;
+        return;
+    }
+    glUniform1i(localisation, slot); // Definir l'uniforme
 }
 
 // Obtenir l'identifiant du programme de shader

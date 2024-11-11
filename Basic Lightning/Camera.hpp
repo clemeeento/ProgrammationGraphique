@@ -17,6 +17,7 @@ public :
     const glm::vec3& getLook() const ;// Retourne le point cible
     const glm::vec3& getRight() const ;// Retourne le vecteur droit
     const glm::vec3& getUp() const ;// Retourne le vecteur haut
+    const glm::vec3& getPosition() const;// Retourne la position de la camera
 
     float getFOV() const {return mFov;}// Retourne le champ de vision
     void setFOV(float fov) {mFov = fov;}// Definir le champ de vision

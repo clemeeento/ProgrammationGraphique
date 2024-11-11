@@ -26,4 +26,4 @@ Vidéo 11 : Basic Lightning II
 Vidéo 12 : Basic Lightning III  
   
 **Avancement**  
-Vidéo 9/12 : fini   
+Vidéo 11/12 : fini   
