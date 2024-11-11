@@ -1,7 +1,9 @@
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "ShaderProgram.hpp"
@@ -17,9 +19,10 @@ int gWindowHeight = 768;
 GLFWwindow* gWindow = NULL;
 bool gFullScreen = false;
 bool gWireframe = false;
+int gFlashlightOn = true;
+glm::vec4 gClearColor(0.06f, 0.06f, 0.07f, 1.0f);
 
-
-FPSCamera fpsCamera(glm::vec3(0.0f, 3.0f, 10.0f));
+FPSCamera fpsCamera(glm::vec3(0.0f, 3.5f, 10.0f));
 const double ZOOM_SENSITIVITY = -3.0;
 const float MOVE_SPEED = 30.0;
 const float MOUSE_SENSITIVITY = 0.1f;
@@ -34,7 +37,7 @@ void glfw_onKey(GLFWwindow* gWindow, int key, int scancode, int action, int mode
         glfwSetWindowShouldClose(gWindow, GL_TRUE);
     }
 
-    if(key == GLFW_KEY_Q && action == GLFW_PRESS)
+    if(key == GLFW_KEY_F1 && action == GLFW_PRESS)
     {
         gWireframe = !gWireframe;
         if(gWireframe)
@@ -46,6 +49,12 @@ void glfw_onKey(GLFWwindow* gWindow, int key, int scancode, int action, int mode
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Mode plein
         }
     }
+
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+	{
+		// Activer / Désactiver la lampe torche
+		gFlashlightOn = !gFlashlightOn;
+	}
 }
 
 // Fonction de rappel pour la gestion de la taille de la fenêtre
@@ -198,6 +207,9 @@ bool initOpenGL()
     // Gestion de la molette de la souris
     glfwSetScrollCallback(gWindow, glfw_onMouseScroll);
 
+    // Gestion de la taille de la fenêtre
+    glfwSetFramebufferSizeCallback(gWindow, glfw_onFramebufferSize);
+
     // Cacher et saisir le curseur, mouvement illimité
     glfwSetInputMode(gWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPos(gWindow, gWindowWidth / 2.0, gWindowHeight / 2.0);
@@ -211,8 +223,7 @@ bool initOpenGL()
     }
 
     // Configuration de l'affichage
-    //glClearColor(0.23f, 0.38f, 0.47f, 1.0f); // Couleur de fond
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Couleur de fond Noir
+    glClearColor(gClearColor.r, gClearColor.g, gClearColor.b, gClearColor.a);
     glViewport(0, 0, gWindowWidth, gWindowHeight); // Taille de la fenêtre
     glEnable(GL_DEPTH_TEST); // Activation du test de profondeur
 
@@ -229,73 +240,84 @@ int main()
     }
 
     // Creation des shaders----------------------------------------
-    ShaderProgram lightShader; 
-    lightShader.loadShaders("Shaders/basic.vert", "Shaders/basic.frag"); // Charger les shaders
-
-    ShaderProgram lightningShader; 
-    lightningShader.loadShaders("Shaders/lightning.vert", "Shaders/lightning.frag"); // Charger les shaders
-
-    // Position des modeles----------------------------------------
-    glm::vec3 modelPositions[] = 
-    {
-        glm::vec3(-3.5f, 0.0f, 0.0f),   // Crate
-        glm::vec3(3.5f, 0.0f, 0.0f),    // Woodcrate
-        glm::vec3(0.0f, 0.0f, -2.0f),    // Robot
-        glm::vec3(0.0f, 0.0f, 2.0f),    // Pin
-        glm::vec3(-2.0f, 0.0f, 2.0f),   // Bunny
-        glm::vec3(0.0f, 0.0f, 0.0f)     // Floor
-    };
-
-    // Mise à l'échelle des modeles--------------------------------
-    glm::vec3 modelScales[] = 
-    {
-        glm::vec3(1.0f, 1.0f, 1.0f),    // Crate
-        glm::vec3(1.0f, 1.0f, 1.0f),    // Woodcrate
-        glm::vec3(1.0f, 1.0f, 1.0f),    // Robot
-        glm::vec3(0.1f, 0.1f, 0.1f),    // Pin
-        glm::vec3(0.7f, 0.7f, 0.7f),    // Bunny
-        glm::vec3(10.0f, 1.0f, 10.0f)     // Floor
-    };
+    ShaderProgram lightingShader;
+	lightingShader.loadShaders("Shaders/lighting_dir_point_spot.vert", "Shaders/lighting_dir_point_spot.frag"); // Charger les shaders
 
     // Mesh et texture---------------------------------------------
     // Creation du mesh
-    const int numModels = 6;
+    const int numModels = 9;
     Mesh mesh[numModels];
     Texture2D texture[numModels];
 
     // Charger les objets
-    mesh[0].loadOBJ("Models/crate.obj");
-    mesh[1].loadOBJ("Models/woodcrate.obj");
-    mesh[2].loadOBJ("Models/robot.obj");
-    mesh[3].loadOBJ("Models/bowling_pin.obj");
-    mesh[4].loadOBJ("Models/bunny.obj");
-    mesh[5].loadOBJ("Models/floor.obj");
+    mesh[0].loadOBJ("models/barrel.obj");
+	mesh[1].loadOBJ("models/woodcrate.obj");
+	mesh[2].loadOBJ("models/robot.obj");
+	mesh[3].loadOBJ("models/floor.obj");
+	mesh[4].loadOBJ("models/bowling_pin.obj");
+	mesh[5].loadOBJ("models/bunny.obj");
+	mesh[6].loadOBJ("models/lampPost.obj");
+	mesh[7].loadOBJ("models/lampPost.obj");
+	mesh[8].loadOBJ("models/lampPost.obj");
 
     // Charger les textures
-    texture[0].loadTexture("Textures/crate.jpg", true);
-    texture[1].loadTexture("Textures/woodcrate_diffuse.jpg", true);
-    texture[2].loadTexture("Textures/robot_diffuse.jpg", true);
-    texture[3].loadTexture("Textures/AMF.tga", true);
-    texture[4].loadTexture("Textures/bunny_diffuse.jpg", true);
-    texture[5].loadTexture("Textures/tile_floor.jpg", true);
+    texture[0].loadTexture("textures/barrel_diffuse.png", true);
+	texture[1].loadTexture("textures/woodcrate_diffuse.jpg", true);
+	texture[2].loadTexture("textures/robot_diffuse.jpg", true);
+	texture[3].loadTexture("textures/tile_floor.jpg", true);
+	texture[4].loadTexture("textures/AMF.tga", true);
+	texture[5].loadTexture("textures/bunny_diffuse.jpg", true);
+	texture[6].loadTexture("textures/lamp_post_diffuse.png", true);
+	texture[7].loadTexture("textures/lamp_post_diffuse.png", true);
+	texture[8].loadTexture("textures/lamp_post_diffuse.png", true);
 
-    // Mesh de la lumière-----------------------------------------
-    Mesh lightMesh;
-    lightMesh.loadOBJ("Models/light.obj");
+    // Position des modeles----------------------------------------
+    glm::vec3 modelPosition[] = 
+    {
+        glm::vec3(-3.5f, 0.0f, 0.0f),	// Barrel
+		glm::vec3(3.5f, 0.0f, 0.0f),	// Crate
+		glm::vec3(0.0f, 0.0f, -2.0f),	// Robot
+		glm::vec3(0.0f, 0.0f, 0.0f),	// Floor
+		glm::vec3(0.0f, 0.0f, 2.0f),	// Pin
+		glm::vec3(-2.0f, 0.0f, 2.0f),	// Bunny
+		glm::vec3(-5.5f, 0.0f, 0.0f),	// Lamp post 1
+		glm::vec3(0.0f, 0.0f, 0.0f),	// Lamp post 2
+		glm::vec3(5.5f, 0.0f, 0.0f)		// Lamp post 2
+    };
+
+    // Mise à l'échelle des modeles--------------------------------
+    glm::vec3 modelScale[] = 
+    {
+        glm::vec3(1.0f, 1.0f, 1.0f),	// Barrel
+		glm::vec3(1.0f, 1.0f, 1.0f),	// Crate
+		glm::vec3(1.0f, 1.0f, 1.0f),	// Robot
+		glm::vec3(10.0f, 1.0f, 10.0f),	// Floor
+		glm::vec3(0.1f, 0.1f, 0.1f),	// Pin
+		glm::vec3(0.7f, 0.7f, 0.7f),	// Bunny
+		glm::vec3(1.0f, 1.0f, 1.0f),	// Lamp post 1
+		glm::vec3(1.0f, 1.0f, 1.0f),	// Lamp post 2
+		glm::vec3(1.0f, 1.0f, 1.0f)		// Lamp post 3
+    };
+
+    // Position des lumieres---------------------------------------
+    glm::vec3 pointLightPos[3] = 
+    {
+		glm::vec3(-5.0f, 3.8f, 0.0f),
+		glm::vec3(0.5f,  3.8f, 0.0f),
+		glm::vec3(5.0f,  3.8,  0.0f)
+	};
 
 
     double lastTime = glfwGetTime(); // Temps écoulé depuis l'initialisation de GLFW
 
-    float angle = 0.0f; // Angle de rotation de la lumière
-
     // Boucle principale-------------------------------------------
     while(glfwWindowShouldClose(gWindow) == false)
     {
-        double currentTime = glfwGetTime(); // Temps écoulé depuis l'initialisation de GLFW
-        double deltaTime = currentTime - lastTime; // Temps écoulé depuis la dernière image
-
         // Calcul des FPS--------------------------------------
         showFPS(gWindow);
+
+        double currentTime = glfwGetTime(); // Temps écoulé depuis l'initialisation de GLFW
+        double deltaTime = currentTime - lastTime; // Temps écoulé depuis la dernière image
 
         // Gestion des evenements------------------------------
         glfwPollEvents();
@@ -317,7 +339,7 @@ int main()
         view = fpsCamera.getViewMatrix(); 
 
         // Matrice de projection
-        projection = glm::perspective(glm::radians(fpsCamera.getFOV()), (float)gWindowWidth / (float)gWindowHeight, 0.1f, 100.0f); 
+        projection = glm::perspective(glm::radians(fpsCamera.getFOV()), (float)gWindowWidth / (float)gWindowHeight, 0.1f, 200.0f); 
 
         // Position de la vue
         glm::vec3 viewPos;
@@ -325,43 +347,78 @@ int main()
         viewPos.y = fpsCamera.getPosition().y;
         viewPos.z = fpsCamera.getPosition().z;
 
-        // Position et couleur de la lumière
-        glm::vec3 lightPos(0.0f, 1.0f, 10.0f);
-        glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
-
-        // Deplacement de la lumière
-        angle = angle + float(deltaTime) * 50.0f;
-        lightPos.x = 8.0f * sinf(glm::radians(angle));
-
         // Utiliser le programme de shader
-        lightningShader.use(); 
+        lightingShader.use();
 
         // Uniforms
-        lightningShader.setUniform("view", view);
-        lightningShader.setUniform("projection", projection);
-        lightningShader.setUniform("viewPos", viewPos);
+        lightingShader.setUniform("model", model);
+		lightingShader.setUniform("view", view);
+		lightingShader.setUniform("projection", projection);
+		lightingShader.setUniform("viewPos", viewPos);
 
-        lightningShader.setUniform("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-        lightningShader.setUniform("light.diffuse", lightColor);
-        lightningShader.setUniform("light.specular", glm::vec3(1.0f, 0.8f, 0.0f));
-        lightningShader.setUniform("light.position", lightPos);
+       // Lumiere directionnelle
+		lightingShader.setUniform("sunLight.direction", glm::vec3(0.0f, -0.9f, -0.17f));
+		lightingShader.setUniform("sunLight.diffuse", glm::vec3(0.1f, 0.1f, 0.1f));	 // Sombre
+		lightingShader.setUniform("sunLight.specular", glm::vec3(0.1f, 0.1f, 0.1f));
+
+		// Point de lumiere 1
+		lightingShader.setUniform("pointLights[0].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		lightingShader.setUniform("pointLights[0].diffuse", glm::vec3(0.0f, 1.0f, 0.1f));	// Lumiere verte
+		lightingShader.setUniform("pointLights[0].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		lightingShader.setUniform("pointLights[0].position", pointLightPos[0]);
+		lightingShader.setUniform("pointLights[0].constant", 1.0f);
+		lightingShader.setUniform("pointLights[0].linear", 0.22f);
+		lightingShader.setUniform("pointLights[0].exponent", 0.20f);
+
+		// Point de lumiere 2
+		lightingShader.setUniform("pointLights[1].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		lightingShader.setUniform("pointLights[1].diffuse", glm::vec3(1.0f, 0.1f, 0.0f));	// Lumiere rouge
+		lightingShader.setUniform("pointLights[1].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		lightingShader.setUniform("pointLights[1].position", pointLightPos[1]);
+		lightingShader.setUniform("pointLights[1].constant", 1.0f);
+		lightingShader.setUniform("pointLights[1].linear", 0.22f);
+		lightingShader.setUniform("pointLights[1].exponent", 0.20f);
+
+		// Point de lumiere 3
+		lightingShader.setUniform("pointLights[2].ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+		lightingShader.setUniform("pointLights[2].diffuse", glm::vec3(0.0f, 0.1f, 1.0f));	// Lumiere bleue
+		lightingShader.setUniform("pointLights[2].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		lightingShader.setUniform("pointLights[2].position", pointLightPos[2]);
+		lightingShader.setUniform("pointLights[2].constant", 1.0f);
+		lightingShader.setUniform("pointLights[2].linear", 0.22f);
+		lightingShader.setUniform("pointLights[2].exponent", 0.20f);
+
+		// Lampe torche
+		glm::vec3 spotlightPos = fpsCamera.getPosition();
+
+		lightingShader.setUniform("spotLight.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
+		lightingShader.setUniform("spotLight.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+		lightingShader.setUniform("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		lightingShader.setUniform("spotLight.position", spotlightPos);
+		lightingShader.setUniform("spotLight.direction", fpsCamera.getLook());
+		lightingShader.setUniform("spotLight.cosInnerCone", glm::cos(glm::radians(15.0f)));
+		lightingShader.setUniform("spotLight.cosOuterCone", glm::cos(glm::radians(20.0f)));
+		lightingShader.setUniform("spotLight.constant", 1.0f);
+		lightingShader.setUniform("spotLight.linear", 0.07f);
+		lightingShader.setUniform("spotLight.exponent", 0.017f);
+		lightingShader.setUniform("spotLight.on", gFlashlightOn);
 
 
-        // Dessin des modeles
+        // Dessin de la scene
         for(int i = 0; i < numModels; i = i + 1)
         {
             // Matrice de modèle
             model = glm::mat4(1.0f);
-            model = glm::translate(model, modelPositions[i]);
-            model = glm::scale(model, modelScales[i]);
+            model = glm::translate(model, modelPosition[i]);
+            model = glm::scale(model, modelScale[i]);
 
             // Uniforms
-            lightningShader.setUniform("model", model); // Matrice de modèle
-            lightningShader.setUniform("material.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
-            lightningShader.setUniformSampler("material.diffuseMap", 0);
-            lightningShader.setUniform("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-            lightningShader.setUniform("material.shininess", 32.0f);
-
+            lightingShader.setUniform("model", model);
+            
+            lightingShader.setUniform("material.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
+			lightingShader.setUniformSampler("material.diffuseMap", 0);
+			lightingShader.setUniform("material.specular", glm::vec3(0.8f, 0.8f, 0.8f));
+			lightingShader.setUniform("material.shininess", 32.0f);
 
             // Lier la texture
             texture[i].bind(0);
@@ -372,20 +429,6 @@ int main()
             // Delier la texture
             texture[i].unbind(0);
         }
-
-        // Dessin de la lumière
-        model = glm::mat4(1.0f); // Matrice identité pour assurer que toutes transformations précédentes sont annulées
-        model = glm::translate(model, lightPos); // Appliquer la translation de la lumière
-
-        lightShader.use(); // Utiliser le programme de shader
-
-        // Uniforms
-        lightShader.setUniform("lightColor", lightColor);
-        lightShader.setUniform("model", model);
-        lightShader.setUniform("view", view);
-        lightShader.setUniform("projection", projection);
-
-        lightMesh.draw(); // Dessin du mesh de la lumière
 
         // Echange des buffers---------------------------------
         glfwSwapBuffers(gWindow);
