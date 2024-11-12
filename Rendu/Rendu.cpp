@@ -14,19 +14,19 @@
 #define GLEW_STATIC
 
 const char* APP_TITLE = "Rendu OpenGL - Clément Furnon";
-int gWindowWidth = 1024;
-int gWindowHeight = 768;
+int gWindowWidth = 1920;
+int gWindowHeight = 1080;
 GLFWwindow* gWindow = NULL;
-bool gFullScreen = false;
+bool gFullScreen = true;
 bool gWireframe = false;
 int gFlashlightOn = true;
 glm::vec4 gClearColor(0.392f, 0.667f, 0.922f, 1.0f);
 
 FPSCamera fpsCamera(glm::vec3(0.0f, 3.5f, 10.0f));
 const double ZOOM_SENSITIVITY = -3.0;
-const float MOVE_SPEED = 30.0;
+const float MOVE_SPEED = 5.0;
 const float MOUSE_SENSITIVITY = 0.1f;
-const float GROUND_HEIGHT = 2.0f; // Hauteur du sol
+const float GROUND_HEIGHT = -2.0f; // Hauteur du sol
 
 
 // Fonction de rappel pour la gestion des evenements clavier
@@ -250,7 +250,7 @@ void materialShaders(ShaderProgram lightingShader)
 void spotlightShaders(ShaderProgram lightingShader, glm::vec3 spotlightPos)
 {
    lightingShader.setUniform("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-    lightingShader.setUniform("spotLight.diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+    lightingShader.setUniform("spotLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
     lightingShader.setUniform("spotLight.specular", glm::vec3(2.0f, 2.0f, 2.0f));
     lightingShader.setUniform("spotLight.position", spotlightPos);
     lightingShader.setUniform("spotLight.direction", fpsCamera.getLook());
@@ -301,22 +301,30 @@ int main()
 
     // Charger les objets
     mesh[0].loadOBJ("Models/Floor.obj"); // Sol
+    mesh[1].loadOBJ("Models/Cabin.obj");
+    mesh[2].loadOBJ("Models/Cabin_2.obj");
     
 
     // Charger les textures
     texture[0].loadTexture("Textures/Floor.jpg", true); // Sol
+    texture[1].loadTexture("Textures/Cabin.png", true); 
+    texture[2].loadTexture("Textures/Cabin.png", true);
    
     // Position des modeles----------------------------------------
     glm::vec3 modelPosition[] = 
     {
-        glm::vec3(0.0f, 0.0f, 0.0f)	// Sol
+        glm::vec3(0.0f, 0.0f, 0.0f), // Sol
+        glm::vec3(0.0f, 3.85f, 0.0f),
+        glm::vec3(10.0f, 0.35f, 0.0f)
     
     };
 
     // Mise à l'échelle des modeles--------------------------------
     glm::vec3 modelScale[] = 
     {
-        glm::vec3(10.0f, 1.0f, 10.0f)	// Sol
+        glm::vec3(10.0f, 1.0f, 10.0f),	// Sol
+        glm::vec3(0.01f, 0.01f, 0.01f),
+        glm::vec3(0.01f, 0.01f, 0.01f)
     };
 
     //Position des lumieres---------------------------------------
@@ -423,6 +431,10 @@ int main()
         spotlightShaders(lightingShader, fpsCamera.getPosition());
 		
         // Dessin de la scene
+
+        // Sol
+        // Matrice de modèle
+
         for(int i = 0; i < numModels; i = i + 1)
         {
             // Matrice de modèle
