@@ -10,232 +10,13 @@
 #include "Texture2D.hpp"
 #include "Camera.hpp"
 #include "Mesh.hpp"
+#include "Display.hpp"
 
 #define GLEW_STATIC
 
-const char* APP_TITLE = "Rendu OpenGL - Clément Furnon";
-int gWindowWidth = 1920;
-int gWindowHeight = 1080;
-GLFWwindow* gWindow = NULL;
-bool gFullScreen = true;
-bool gWireframe = false;
-int gFlashlightOn = true;
-glm::vec4 gClearColor(0.392f, 0.667f, 0.922f, 1.0f);
-
 FPSCamera fpsCamera(glm::vec3(0.0f, 3.5f, 10.0f));
-const double ZOOM_SENSITIVITY = -3.0;
-const float MOVE_SPEED = 5.0;
-const float MOUSE_SENSITIVITY = 0.1f;
-const float GROUND_HEIGHT = 2.0f; // Hauteur du sol
+Display display(fpsCamera);
 
-
-// Fonction de rappel pour la gestion des evenements clavier
-void glfw_onKey(GLFWwindow* gWindow, int key, int scancode, int action, int mode)
-{
-    // Touche ECHAP : fermer la fenêtre
-    if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(gWindow, GL_TRUE);
-    }
-
-    if(key == GLFW_KEY_F1 && action == GLFW_PRESS)
-    {
-        gWireframe = !gWireframe;
-        if(gWireframe)
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Mode vide
-        }
-        else
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Mode plein
-        }
-    }
-
-    if (key == GLFW_KEY_F && action == GLFW_PRESS)
-	{
-		// Activer / Désactiver la lampe torche
-		gFlashlightOn = !gFlashlightOn;
-	}
-}
-
-// Fonction de rappel pour la gestion de la taille de la fenêtre
-void glfw_onFramebufferSize(GLFWwindow* gWindow, int width, int height)
-{
-    gWindowWidth = width;
-    gWindowHeight = height;
-    glViewport(0, 0, gWindowWidth, gWindowHeight);
-}
-
-// Fonction de rappel pour la gestion de la souris
-void glfw_onMouseScroll(GLFWwindow* gWindow, double deltaX, double deltaY)
-{
-    // Zoom
-    double fov = fpsCamera.getFOV() + deltaY * ZOOM_SENSITIVITY;
-
-    // Limiter le champ de vision
-    fov = glm::clamp(fov, 1.0, 120.0);
-
-    // Definir le champ de vision
-    fpsCamera.setFOV((float)fov);
-}
-
-// Fonction de mise à jour / Deplacement de la camera
-void update(double elapsedTime)
-{
-    // Orientation de la caméra
-    double mouseX, mouseY;
-
-    // Récupérer la position de la souris
-    glfwGetCursorPos(gWindow, &mouseX, &mouseY);
-
-    // Rotation de la caméra de la différence de position de la souris depuis le centre de la fenêtre. Multiplier par la sensibilité de la souris
-    fpsCamera.rotate((float)(gWindowWidth / 2 - mouseX) * MOUSE_SENSITIVITY, (float)(gWindowHeight / 2 - mouseY) * MOUSE_SENSITIVITY);
-
-    // Réinitialiser la position de la souris au centre de la fenêtre
-    glfwSetCursorPos(gWindow, gWindowWidth / 2.0, gWindowHeight / 2.0);
-
-    // Deplacement de la camera
-    // Avant / Arrière
-    if(glfwGetKey(gWindow, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getLook());
-    }
-    else if(glfwGetKey(gWindow, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getLook());
-    }
-
-    // Gauche / Droite
-    if(glfwGetKey(gWindow, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getRight());
-    }
-    else if(glfwGetKey(gWindow, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getRight());
-    }
-
-    // Haut / Bas
-    if(glfwGetKey(gWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
-    {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getUp());
-    }
-    else if(glfwGetKey(gWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-    {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getUp());
-    }
-
-    // Vérification de la hauteur pour empêcher de traverser le sol
-    if(fpsCamera.getPosition().y < GROUND_HEIGHT)
-    {
-        glm::vec3 pos = fpsCamera.getPosition();
-        pos.y = GROUND_HEIGHT;  // Contraindre la hauteur au-dessus du sol
-        fpsCamera.setPosition(pos);
-    }
-}
-
-// Fonction pour afficher les FPS
-void showFPS(GLFWwindow* gWindow)
-{
-    static double previousSeconds = 0.0;
-    static int frameCount = 0;
-    double elapsedSeconds;
-    double currentSeconds = glfwGetTime(); // Temps ecoule depuis l'initialisation de GLFW
-
-    elapsedSeconds = currentSeconds - previousSeconds;
-
-    // Limite de 4 par seconde
-    if(elapsedSeconds > 0.25)
-    {
-        previousSeconds = currentSeconds;
-        double fps = (double)frameCount / elapsedSeconds;
-
-        // Affichage des informations
-        std::ostringstream outs;
-        outs.precision(3); // 3 chiffres après la virgule
-        outs << std::fixed
-             << APP_TITLE << "   "
-             << "FPS: " << fps; 
-        glfwSetWindowTitle(gWindow, outs.str().c_str());
-
-        frameCount = 0;
-    }
-
-    frameCount = frameCount + 1;
-}
-
-// Fonction d'initialisation d'OpenGL
-bool initOpenGL()
-{
-    // Initialisation de GLFW
-    if(!glfwInit())
-    {
-        std::cout << "Erreur d'initialisation de GLFW" << std::endl;
-        return false;
-    }
-
-    // Configuration de GLFW
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-    // Creation de la fenêtre
-    if(gFullScreen) 
-    {
-        GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* pVmode = glfwGetVideoMode(pMonitor);
-        if(pVmode != NULL)
-        {
-            gWindow = glfwCreateWindow(pVmode->width, pVmode->height, APP_TITLE, pMonitor, NULL);
-        }
-    }
-    else
-    {
-        gWindow = glfwCreateWindow(gWindowWidth, gWindowHeight, APP_TITLE, NULL, NULL);
-    }
-
-    if(gWindow == NULL)
-    {
-        std::cout << "Erreur lors de la creation de la fenêtre GLFW" << std::endl;
-        glfwTerminate();
-        return false;
-    }
-
-    // Rendre le contexte OpenGL courant
-    glfwMakeContextCurrent(gWindow);
-
-    // Désactive la V-Sync pour ne pas limiter les FPS
-    //glfwSwapInterval(0);
-
-    // Gestion des evenements clavier
-    glfwSetKeyCallback(gWindow, glfw_onKey);
-
-    // Gestion de la molette de la souris
-    glfwSetScrollCallback(gWindow, glfw_onMouseScroll);
-
-    // Gestion de la taille de la fenêtre
-    glfwSetFramebufferSizeCallback(gWindow, glfw_onFramebufferSize);
-
-    // Cacher et saisir le curseur, mouvement illimité
-    glfwSetInputMode(gWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPos(gWindow, gWindowWidth / 2.0, gWindowHeight / 2.0);
-
-    // Initialisation de GLEW
-    glewExperimental = GL_TRUE;
-    if(glewInit() != GLEW_OK)
-    {
-        std::cout << "Erreur d'initialisation de GLEW" << std::endl;
-        return false;
-    }
-
-    // Configuration de l'affichage
-    glClearColor(gClearColor.r, gClearColor.g, gClearColor.b, gClearColor.a);
-    glViewport(0, 0, gWindowWidth, gWindowHeight); // Taille de la fenêtre
-    glEnable(GL_DEPTH_TEST); // Activation du test de profondeur
-
-    return true;
-}
 
 // Fonction pour définir les matrices de shader
 void setShaderMatrices(ShaderProgram& shader, const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection, const glm::vec3& viewPos) 
@@ -259,7 +40,7 @@ void spotlightShaders(ShaderProgram lightingShader, glm::vec3 spotlightPos)
     lightingShader.setUniform("spotLight.constant", 1.0f);
     lightingShader.setUniform("spotLight.linear", 0.0045f);
     lightingShader.setUniform("spotLight.exponent", 0.00075f);
-    lightingShader.setUniform("spotLight.on", gFlashlightOn);
+    lightingShader.setUniform("spotLight.on", display.gFlashlightOn);
 }
 
 // Fonction pour les points de lumière
@@ -347,7 +128,7 @@ int main()
     glm::vec3 viewPos;
 
     // Initialisation d'OpenGL---------------------------------------
-    if(!initOpenGL())
+    if(!display.initOpenGL())
     {
         std::cerr << "Erreur d'initialisation d'OpenGL" << std::endl;
         return -1;
@@ -358,13 +139,39 @@ int main()
     
     // Modèles et texture--------------------------------------------
     // Charger les objets
-    mesh[0].loadOBJ("Models/Floor.obj"); // Sol
+    // Sol
+    mesh[0].loadOBJ("Models/Floor.obj");
+    // Maisons
     mesh[1].loadOBJ("Models/Cabin_00.obj");
-    
+    // mesh[2].loadOBJ("Models/Cabin_01.obj");
+    // mesh[3].loadOBJ("Models/Chalet.obj");
+    // mesh[4].loadOBJ("Models/Church.obj");
+    // mesh[5].loadOBJ("Models/LogCabin.obj");
+    // // Végétation
+    // mesh[6].loadOBJ("Models/Bush.obj");
+    // mesh[7].loadOBJ("Models/BuingnaTree.obj");
+    // mesh[8].loadOBJ("Models/FirTree.obj");
+    // mesh[9].loadOBJ("Models/Forest.obj");
+    // Animaux
+
+    // Accessoires
+
+
     // Charger les textures
-    texture[0].loadTexture("Textures/Floor.jpg", true); // Sol
-    texture[1].loadTexture("Textures/Cabin_00.png", true); 
-   
+    // Sol
+    texture[0].loadTexture("Textures/Floor.jpg", true);
+    // Maisons
+    texture[1].loadTexture("Textures/Cabin_00.png", true);
+    // texture[2].loadTexture("Textures/Cabin_01.png", true);
+    // texture[3].loadTexture("Textures/Chalet.png", true);
+    // texture[4].loadTexture("Textures/Church.jpg", true);
+    // texture[5].loadTexture("Textures/LogCabin.png", true); 
+    // // Végétation
+    // texture[6].loadTexture("Textures/Bush.png", true);
+    // Animaux
+
+    // Accessoires
+
     // Position des modeles
     glm::vec3 modelPosition[numModels] = 
     {
@@ -398,10 +205,10 @@ int main()
     lastTime = glfwGetTime(); 
 
     // Boucle principale---------------------------------------------
-    while(glfwWindowShouldClose(gWindow) == false)
+    while(glfwWindowShouldClose(display.gWindow) == false)
     {
         // Calcul des FPS---------------------------------------
-        showFPS(gWindow);
+        display.showFPS(display.gWindow);
 
         // Temps écoulé depuis la dernière image----------------
         currentTime = glfwGetTime(); // Temps écoulé depuis l'initialisation de GLFW
@@ -411,7 +218,7 @@ int main()
         glfwPollEvents();
 
         // Mise à jour------------------------------------------
-        update(deltaTime);
+        display.update(deltaTime);
 
         // Effacement de la fenêtre-----------------------------
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -435,7 +242,7 @@ int main()
         view = fpsCamera.getViewMatrix(); 
 
         // Matrice de projection
-        projection = glm::perspective(glm::radians(fpsCamera.getFOV()), (float)gWindowWidth / (float)gWindowHeight, 0.1f, 200.0f); 
+        projection = glm::perspective(glm::radians(fpsCamera.getFOV()), (float)display.gWindowWidth / (float)display.gWindowHeight, 0.1f, 200.0f); 
 
         // Position de la vue
         glm::vec3 viewPos = fpsCamera.getPosition();
@@ -464,7 +271,7 @@ int main()
         }
 
         // Echange des buffers----------------------------------
-        glfwSwapBuffers(gWindow);
+        glfwSwapBuffers(display.gWindow);
 
         // Mise à jour du temps---------------------------------
         lastTime = currentTime;
