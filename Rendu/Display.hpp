@@ -41,7 +41,7 @@ private:
 
     const float MOVE_SPEED = 5.0;
     const float MOUSE_SENSITIVITY = 0.1f;
-    const float GROUND_HEIGHT = 2.0f; 
+    const float GROUND_HEIGHT = 1.5f; 
 };
 
 #endif // CAMERA_HPP

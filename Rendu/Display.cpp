@@ -4,7 +4,7 @@
 // Initialisation des membres statiques
 int Display::gWindowWidth = 1920;
 int Display::gWindowHeight = 1080;
-bool Display::gFlashlightOn = true;
+bool Display::gFlashlightOn = false;
 bool Display::gFullScreen = true;
 bool Display::VSync = true;
 
@@ -203,11 +203,15 @@ void Display::glfw_onKey(GLFWwindow* gWindow, int key, int scancode, int action,
             const GLFWvidmode* pVmode = glfwGetVideoMode(pMonitor);
             if(pVmode != NULL)
             {
-                glfwSetWindowMonitor(gWindow, pMonitor, 0, 0, pVmode->width, pVmode->height, GLFW_DONT_CARE);
+                gWindowWidth = pVmode->width;
+                gWindowHeight = pVmode->height;
+                glfwSetWindowMonitor(gWindow, pMonitor, 0, 0, gWindowWidth, gWindowHeight, GLFW_DONT_CARE);
             }
         }
         else
         {
+            gWindowWidth = 1280;
+            gWindowHeight = 720;
             glfwSetWindowMonitor(gWindow, NULL, 100, 100, gWindowWidth, gWindowHeight, GLFW_DONT_CARE);
         }
     }

@@ -71,8 +71,8 @@ void renderModel(ShaderProgram &shader, Mesh &mesh, Texture2D &texture, glm::vec
 {
     // Matrice de modèle
     model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::translate(model, position);
+    model = glm::rotate(model, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, scale);
 
     // Uniforms
@@ -115,7 +115,7 @@ int main()
     ShaderProgram lightingShader;
 
     // Modèles et textures
-    const int numModels = 6;
+    const int numModels = 38;
     Mesh mesh[numModels];
     Texture2D texture[numModels];
 
@@ -140,58 +140,152 @@ int main()
     // Modèles et texture--------------------------------------------
     // Charger les objets
     // Sol
-    mesh[0].loadOBJ("Models/Floor.obj");
+    mesh[0].loadOBJ("Models/Floor.obj"); // Sol
     // Maisons
-    mesh[1].loadOBJ("Models/Cabin_00.obj");
-    // mesh[2].loadOBJ("Models/Cabin_01.obj");
-    // mesh[3].loadOBJ("Models/Chalet.obj");
-    // mesh[4].loadOBJ("Models/Church.obj");
-    // mesh[5].loadOBJ("Models/LogCabin.obj");
-    // // Végétation
-    // mesh[6].loadOBJ("Models/Bush.obj");
-    // mesh[7].loadOBJ("Models/BuingnaTree.obj");
-    // mesh[8].loadOBJ("Models/FirTree.obj");
-    // mesh[9].loadOBJ("Models/Forest.obj");
+    mesh[1].loadOBJ("Models/Cabin_00.obj"); // Cabane 1
+    mesh[2].loadOBJ("Models/Cabin_01.obj"); // Cabane 2
+    mesh[3].loadOBJ("Models/Chalet.obj"); // Chalet
+    mesh[4].loadOBJ("Models/Church.obj"); // Eglise
+    mesh[5].loadOBJ("Models/LogCabin.obj"); // Cabane en rondins
+    mesh[6].loadOBJ("Models/TreeHouse.obj"); // Cabane dans l'arbre
+    // Végétation
+    mesh[7].loadOBJ("Models/Bush.obj"); // Buisson
+    mesh[8].loadOBJ("Models/FirTree.obj"); // Sapin
+    mesh[9].loadOBJ("Models/Forest.obj"); // Forêt
+    mesh[10].loadOBJ("Models/Grass.obj"); // Herbe
+    mesh[11].loadOBJ("Models/OakTree.obj"); // Chêne
+    mesh[12].loadOBJ("Models/PineTree.obj"); // Pin
+    mesh[13].loadOBJ("Models/Pinecone.obj"); // Pomme de pin
+    mesh[14].loadOBJ("Models/Pond.obj"); // Etang
+    mesh[15].loadOBJ("Models/Rock.obj"); // Roche 
+    mesh[16].loadOBJ("Models/Tree.obj"); // Arbre
+    mesh[17].loadOBJ("Models/Trunk_00.obj"); // Tronc 1
+    mesh[18].loadOBJ("Models/Trunk_01.obj"); // Tronc 2
+    mesh[19].loadOBJ("Models/Shrub.obj"); // Arbuste
     // Animaux
-
+    mesh[20].loadOBJ("Models/Badger.obj"); // Blaireau
+    mesh[21].loadOBJ("Models/Bear.obj"); // Ours
+    mesh[22].loadOBJ("Models/Bird.obj"); // Oiseau
+    mesh[23].loadOBJ("Models/Boar.obj"); // Sanglier
+    mesh[24].loadOBJ("Models/Deer_00.obj"); // Cerf 1
+    mesh[25].loadOBJ("Models/Deer_01.obj"); // Cerf 2
+    mesh[26].loadOBJ("Models/Elk.obj"); // Elan
+    mesh[27].loadOBJ("Models/Fawn.obj"); // Faon
+    mesh[28].loadOBJ("Models/Ferret.obj"); // Furet
+    mesh[29].loadOBJ("Models/Fox.obj"); // Renard
+    mesh[30].loadOBJ("Models/Rabbit.obj"); // Lapin
+    mesh[31].loadOBJ("Models/Wolf.obj"); // Loup
     // Accessoires
-
+    mesh[32].loadOBJ("Models/CampFire.obj"); // Feu de camp
+    mesh[33].loadOBJ("Models/Car_00.obj"); // Voiture 1
+    mesh[34].loadOBJ("Models/Car_01.obj"); // Voiture 2
+    mesh[35].loadOBJ("Models/Swing.obj"); // Balançoire
+    mesh[36].loadOBJ("Models/Sun.obj"); // Soleil
 
     // Charger les textures
     // Sol
-    texture[0].loadTexture("Textures/Floor.jpg", true);
+    texture[0].loadTexture("Textures/Floor.jpg", true); // Sol
     // Maisons
-    texture[1].loadTexture("Textures/Cabin_00.png", true);
-    // texture[2].loadTexture("Textures/Cabin_01.png", true);
-    // texture[3].loadTexture("Textures/Chalet.png", true);
-    // texture[4].loadTexture("Textures/Church.jpg", true);
-    // texture[5].loadTexture("Textures/LogCabin.png", true); 
-    // // Végétation
-    // texture[6].loadTexture("Textures/Bush.png", true);
+    texture[1].loadTexture("Textures/Cabin_00.png", true); // Cabane 1
+    texture[2].loadTexture("Textures/Cabin_01.png", true); // Cabane 2
+    texture[3].loadTexture("Textures/Chalet.png", true); // Chalet
+    texture[4].loadTexture("Textures/Church.jpg", true); // Eglise
+    texture[5].loadTexture("Textures/LogCabin.png", true); // Cabane en rondins
+    texture[6].loadTexture("Textures/TreeHouse.png", true); // Cabane dans l'arbre
+    // Végétation
+    texture[7].loadTexture("Textures/Bush.png", true); // Buisson
+    texture[8].loadTexture("Textures/FirTree.png", true); // Sapin
+    texture[9].loadTexture("Textures/Forest.png", true); // Forêt
+    texture[10].loadTexture("Textures/Grass.png", true); // Herbe
+    texture[11].loadTexture("Textures/OakTree.png", true); // Chêne
+    texture[12].loadTexture("Textures/PineTree.png", true); // Pin
+    texture[13].loadTexture("Textures/Pinecone.png", true); // Pomme de pin
+    texture[14].loadTexture("Textures/Pond.png", true); // Etang
+    texture[15].loadTexture("Textures/Rock.png", true); // Roche
+    texture[16].loadTexture("Textures/Tree.png", true); // Arbre
+    texture[17].loadTexture("Textures/Trunk_00.png", true); // Tronc 1
+    texture[18].loadTexture("Textures/Trunk_01.png", true); // Tronc 2
+    texture[19].loadTexture("Textures/Shrub.png", true); // Arbuste
     // Animaux
-
+    texture[20].loadTexture("Textures/Badger.png", true); // Blaireau
+    texture[21].loadTexture("Textures/Bear.png", true); // Ours
+    texture[22].loadTexture("Textures/Bird.png", true); // Oiseau
+    texture[23].loadTexture("Textures/Boar.png", true); // Sanglier
+    texture[24].loadTexture("Textures/Deer_00.png", true); // Cerf 1
+    texture[25].loadTexture("Textures/Deer_01.png", true); // Cerf 2
+    texture[26].loadTexture("Textures/Elk.png", true); // Elan
+    texture[27].loadTexture("Textures/Fawn.png", true); // Faon
+    texture[28].loadTexture("Textures/Ferret.png", true); // Furet 
+    texture[29].loadTexture("Textures/Fox.png", true); // Renard
+    texture[30].loadTexture("Textures/Rabbit.png", true); // Lapin
+    texture[31].loadTexture("Textures/Wolf.png", true); // Loup 
     // Accessoires
+    texture[32].loadTexture("Textures/CampFire.png", true); // Feu de camp
+    texture[33].loadTexture("Textures/Car_00.png", true); // Voiture 1 
+    texture[34].loadTexture("Textures/Car_01.png", true); // Voiture 2
+    texture[35].loadTexture("Textures/Swing.png", true); // Balançoire 
+    texture[36].loadTexture("Textures/Sun.png", true); // Soleil
+
+
+    // Mise à l'échelle des modeles
+    glm::vec3 modelScale[numModels] = 
+    {   
+        glm::vec3(100.0f, 1.0f, 100.0f), // Sol
+        glm::vec3(0.007f, 0.007f, 0.007f), // Cabane 1
+        glm::vec3(0.007f, 0.007f, 0.007f), // Cabane 2
+        glm::vec3(0.01f, 0.01f, 0.01f), // Chalet
+        glm::vec3(0.34f, 0.34f, 0.34f), // Eglise
+        glm::vec3(0.007f, 0.007f, 0.007f), // Cabane en rondins
+        glm::vec3(0.34f, 0.34f, 0.34f), // Cabane dans l'arbre
+        glm::vec3(1.0f, 1.0f, 1.0f), // Buisson
+        glm::vec3(1.0f, 1.0f, 1.0f), // Sapin
+        glm::vec3(20.0f, 20.0f, 20.0f), // Forêt
+        glm::vec3(2.0f, 2.0f, 2.0f), // Herbe
+        glm::vec3(1.0f, 1.0f, 1.0f), // Chêne
+        glm::vec3(0.8f, 0.8f, 0.8f), // Pin
+        glm::vec3(0.15f, 0.15f, 0.15f), // Pomme de pin
+    };
 
     // Position des modeles
     glm::vec3 modelPosition[numModels] = 
     {
         glm::vec3(0.0f, 0.0f, 0.0f), // Sol
-        glm::vec3(0.0f, 0.0f, 0.0f)
+        glm::vec3(0.0f, 0.0f, 0.0f), // Cabane 1
+        glm::vec3(10.0f, 0.0f, 0.0f), // Cabane 2
+        glm::vec3(-10.0f, 0.0f, 0.0f), // Chalet
+        glm::vec3(10.0f, 0.0f, 0.0f), // Eglise
+        glm::vec3(10.0f, 0.0f, 0.0f), // Cabane en rondins
+        glm::vec3(10.0f, 0.0f, 0.0f), // Cabane dans l'arbre
+        glm::vec3(15.0f, 0.0f, 0.0f), // Buisson
+        glm::vec3(20.0f, 0.0f, 0.0f), // Sapin
+        glm::vec3(-30.0f, 0.0f, 0.0f), // Forêt
+        glm::vec3(25.0f, 0.0f, 0.0f), // Herbe
+        glm::vec3(35.0f, 0.0f, 0.0f), // Chêne
+        glm::vec3(45.0f, 0.0f, 0.0f), // Pin
+        glm::vec3(0.0f, 0.0f, 10.0f), // Pomme de pin
+
     };
 
     // Rotation des modeles
     glm::vec3 modelRotation[numModels] = 
     {
         glm::vec3(0.0f, 0.0f, 0.0f), // Sol
-        glm::vec3(0.0f, 0.0f, 0.0f)
+        glm::vec3(0.0f, 0.0f, 0.0f), // Cabane 1
+        glm::vec3(0.0f, 0.0f, 0.0f), // Cabane 2
+        glm::vec3(0.0f, 180.0f, 0.0f), // Chalet
+        glm::vec3(0.0f, 0.0f, 0.0f), // Eglise
+        glm::vec3(0.0f, 0.0f, 0.0f), // Cabane en rondins
+        glm::vec3(0.0f, 0.0f, 0.0f), // Cabane dans l'arbre
+        glm::vec3(0.0f, 0.0f, 0.0f), // Buisson
+        glm::vec3(0.0f, 0.0f, 0.0f), // Sapin
+        glm::vec3(0.0f, 0.0f, 0.0f), // Forêt
+        glm::vec3(0.0f, 0.0f, 0.0f), // Herbe
+        glm::vec3(0.0f, 0.0f, 0.0f), // Chêne
+        glm::vec3(0.0f, 0.0f, 0.0f), // Pin
+        glm::vec3(0.0f, 0.0f, 0.0f), // Pomme de pin
+
     };
 
-    // Mise à l'échelle des modeles
-    glm::vec3 modelScale[numModels] = 
-    {
-        glm::vec3(10.0f, 1.0f, 10.0f),	// Sol
-        glm::vec3(0.01f, 0.01f, 0.01f)
-    };
 
     //Position des lumieres------------------------------------------
     glm::vec3 pointLightPos[3] = 
@@ -265,10 +359,24 @@ int main()
         spotlightShaders(lightingShader, fpsCamera.getPosition());
 		
         // Affichage de la scene
-        for(int i = 0; i < numModels; i = i + 1)
-        {
-            renderModel(lightingShader, mesh[i], texture[i], modelPosition[i], modelScale[i], modelRotation[i], model);
-        }
+        
+        // Sol
+        renderModel(lightingShader, mesh[0], texture[0], modelPosition[0], modelScale[0], modelRotation[0], model);
+
+        // Maisons
+        renderModel(lightingShader, mesh[1], texture[1], modelPosition[1], modelScale[1], modelRotation[1], model); // Cabane 1
+        //renderModel(lightingShader, mesh[2], texture[2], modelPosition[2], modelScale[2], modelRotation[2], model); // Cabane 2
+        //renderModel(lightingShader, mesh[3], texture[3], modelPosition[3], modelScale[3], modelRotation[3], model); // Chalet
+        //renderModel(lightingShader, mesh[4], texture[4], modelPosition[4], modelScale[4], modelRotation[4], model); // Eglise
+        //renderModel(lightingShader, mesh[5], texture[5], modelPosition[5], modelScale[5], modelRotation[5], model); // Cabane en rondins
+        renderModel(lightingShader, mesh[6], texture[6], modelPosition[6], modelScale[6], modelRotation[6], model); // Cabane dans l'arbre
+        renderModel(lightingShader, mesh[7], texture[7], modelPosition[7], modelScale[7], modelRotation[7], model); // Buisson
+        renderModel(lightingShader, mesh[8], texture[8], modelPosition[8], modelScale[8], modelRotation[8], model); // Sapin
+        renderModel(lightingShader, mesh[9], texture[9], modelPosition[9], modelScale[9], modelRotation[9], model); // Forêt
+        renderModel(lightingShader, mesh[10], texture[10], modelPosition[10], modelScale[10], modelRotation[10], model); // Herbe
+        renderModel(lightingShader, mesh[11], texture[11], modelPosition[11], modelScale[11], modelRotation[11], model); // Chêne
+        renderModel(lightingShader, mesh[12], texture[12], modelPosition[12], modelScale[12], modelRotation[12], model); // Pin
+        renderModel(lightingShader, mesh[13], texture[13], modelPosition[13], modelScale[13], modelRotation[13], model); // Pomme de pin
 
         // Echange des buffers----------------------------------
         glfwSwapBuffers(display.gWindow);
