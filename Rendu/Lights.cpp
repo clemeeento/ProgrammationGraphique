@@ -33,11 +33,20 @@ void Lights::setPointLight(ShaderProgram& shader, int index, glm::vec3 ambient, 
     shader.setUniform((base + "exponent").c_str(), exponent);
 }
 
-// Fonction pour la lumière directionnelle
-void Lights::setDirectionalLight(ShaderProgram& shader, glm::vec3 direction, glm::vec3 diffuse, glm::vec3 specular) 
+// Fonction pour la lumière du soleil
+void Lights::setSunLight(ShaderProgram& shader, glm::vec3 direction, glm::vec3 diffuse, glm::vec3 specular) 
 {
     shader.setUniform("sunLight.direction", direction);
     shader.setUniform("sunLight.diffuse", diffuse);
     shader.setUniform("sunLight.specular", specular);
+}
+
+// Fonction pour la lumière directionnelle
+void Lights::setDirectionalLight(ShaderProgram& shader, int index, glm::vec3 direction, glm::vec3 diffuse, glm::vec3 specular) 
+{
+    std::string base = "directionalLight[" + std::to_string(index) + "].";
+    shader.setUniform((base + "direction").c_str(), direction);
+    shader.setUniform((base + "diffuse").c_str(), diffuse);
+    shader.setUniform((base + "specular").c_str(), specular);
 }
 

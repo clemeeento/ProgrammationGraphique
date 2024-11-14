@@ -44,15 +44,17 @@ struct SpotLight
 	float exponent;
 };
 
-  
+
 in vec2 TexCoord;
 in vec3 FragPos;
 in vec3 Normal;
 
-#define MAX_POINT_LIGHTS 3
+#define POINT_LIGHTS 3
+#define DIRECTIONAL_LIGHTS 2
 
 uniform DirectionalLight sunLight;
-uniform PointLight pointLights[MAX_POINT_LIGHTS];
+uniform DirectionalLight directionalLight[DIRECTIONAL_LIGHTS];
+uniform PointLight pointLights[POINT_LIGHTS];
 uniform SpotLight spotLight;
 uniform Material material;
 uniform vec3 viewPos;
@@ -60,10 +62,10 @@ uniform vec3 viewPos;
 out vec4 frag_color;
 
 
-// Calculer l'effet de la lumière directionnelle et retourner la somme des couleurs diffus et spéculaires résultantes
+// Calculer l'effet de la lumière directionnelle
 vec3 calcDirectionalLightColor(DirectionalLight light, vec3 normal, vec3 viewDir)
 {
-	vec3 lightDir = normalize(-light.direction);  // inversion => Doit être une direction du fragment vers la lumière
+	vec3 lightDir = normalize(-light.direction);
 
 	// Diffus
     float NdotL = max(dot(normal, lightDir), 0.0);
@@ -78,7 +80,7 @@ vec3 calcDirectionalLightColor(DirectionalLight light, vec3 normal, vec3 viewDir
 }
 
 
-// Calculer l'effet de la lumière ponctuelle et retourner la somme des couleurs diffus et spéculaires résultantes
+// Calculer l'effet de la lumière ponctuelle
 vec3 calcPointLightColor(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
 	vec3 lightDir = normalize(light.position - fragPos);
@@ -92,7 +94,7 @@ vec3 calcPointLightColor(PointLight light, vec3 normal, vec3 fragPos, vec3 viewD
 	float NDotH = max(dot(normal, halfDir), 0.0f);
 	vec3 specular = light.specular * material.specular * pow(NDotH, material.shininess);
 
-	// Atténuation avec Kc, Kl, Kq
+	// Atténuation
 	float d = length(light.position - FragPos);
 	float attenuation = 1.0f / (light.constant + light.linear * d + light.exponent * (d * d));
 
@@ -103,7 +105,7 @@ vec3 calcPointLightColor(PointLight light, vec3 normal, vec3 fragPos, vec3 viewD
 }
 
 
-// Calculer l'effet de la lampe torche et retourner la somme des couleurs diffus et spéculaires résultantes
+// Calculer l'effet de la lampe torche
 vec3 calcSpotLightColor(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 {
 	vec3 lightDir = normalize(light.position - fragPos);
@@ -121,7 +123,7 @@ vec3 calcSpotLightColor(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir
 	float NDotH = max(dot(normal, halfDir), 0.0f);
 	vec3 specular = light.specular * material.specular * pow(NDotH, material.shininess);
 
-	// Atténuation avec Kc, Kl, Kq 
+	// Atténuation 
 	float d = length(light.position - FragPos);
 	float attenuation = 1.0f / (light.constant + light.linear * d + light.exponent * (d * d));
 
@@ -141,15 +143,22 @@ void main()
 	vec3 ambient = spotLight.ambient * material.ambient * vec3(texture(material.diffuseMap, TexCoord));
 	vec3 outColor = vec3(0.0f);	
 
+	// Ajouter la couleur de la lumière du soleil
 	outColor = outColor + calcDirectionalLightColor(sunLight, normal, viewDir);
 
-   for(int i = 0; i < MAX_POINT_LIGHTS; i = i + 1)
-   {
-		outColor = outColor + calcPointLightColor(pointLights[i], normal, FragPos, viewDir);
-   }
-          
+	// Appliquer chaque lumière directionnelle
+	for(int i = 0; i < DIRECTIONAL_LIGHTS; i++)
+	{
+		outColor = outColor + calcDirectionalLightColor(directionalLight[i], normal, viewDir);
+	}
 
-	// Si la lumière n'est pas activée, retourner 0 pour les couleurs diffus et spéculaires
+	// Appliquer chaque lumière ponctuelle
+	for(int i = 0; i < POINT_LIGHTS; i++)
+	{
+		outColor = outColor + calcPointLightColor(pointLights[i], normal, FragPos, viewDir);
+	}
+
+	// Appliquer la lumière de la lampe torche si elle est activée
 	if (spotLight.on)
 	{
 		outColor = outColor + calcSpotLightColor(spotLight, normal, FragPos, viewDir);

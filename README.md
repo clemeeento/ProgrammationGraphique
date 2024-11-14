@@ -10,7 +10,7 @@ g++ VirtualCamera_I.cpp ShaderProgram.cpp Texture2D.cpp -o VirtualCamera_I -lope
 g++ VirtualCamera_II.cpp ShaderProgram.cpp Texture2D.cpp Camera.cpp -o VirtualCamera_II -lopengl32 -lglew32 -lglfw3 -lgdi32  
 g++ LoadObjet.cpp ShaderProgram.cpp Texture2D.cpp Camera.cpp Mesh.cpp -o LoadObjet -lopengl32 -lglew32 -lglfw3 -lgdi32  
 g++ BasicLightning.cpp ShaderProgram.cpp Texture2D.cpp Camera.cpp Mesh.cpp -o BasicLightning -lopengl32 -lglew32 -lglfw3 -lgdi32  
-g++ Rendu.cpp ShaderProgram.cpp Texture2D.cpp Camera.cpp Mesh.cpp -o Rendu -lopengl32 -lglew32 -lglfw3 -lgdi32   
+g++ Rendu.cpp ShaderProgram.cpp Texture2D.cpp Camera.cpp Mesh.cpp Display.cpp Models.cpp Lights.cpp -o Rendu -lopengl32 -lglew32 -lglfw3 -lgdi32  
 
 ## Vidéos
 Vidéo 1 : Introduction  

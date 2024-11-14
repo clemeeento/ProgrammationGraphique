@@ -16,7 +16,8 @@ public:
 
     void spotlightShaders(ShaderProgram& lightingShader, glm::vec3 spotlightPos);
     void setPointLight(ShaderProgram& shader, int index, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, glm::vec3 position, float constant, float linear, float exponent);
-    void setDirectionalLight(ShaderProgram& shader, glm::vec3 direction, glm::vec3 diffuse, glm::vec3 specular);
+    void setSunLight(ShaderProgram& shader, glm::vec3 direction, glm::vec3 diffuse, glm::vec3 specular);
+    void setDirectionalLight(ShaderProgram& shader, int index, glm::vec3 direction, glm::vec3 diffuse, glm::vec3 specular); 
 
 private:
     Camera& fpsCamera;

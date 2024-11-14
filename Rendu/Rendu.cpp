@@ -74,8 +74,6 @@ void initializeSceneObjects()
     }
 }
 
-
-
 // Fontion pour afficher la scene complete
 void renderScene(glm::mat4 model)
 {
@@ -153,8 +151,59 @@ void renderScene(glm::mat4 model)
     models.renderModel("voiture", glm::vec3(20.0f, 0.0f, 3.0f), glm::vec3(0.0f, -120.0f, 0.0f), model); // Cabane en rondins
     models.renderModel("feu_camp", glm::vec3(2.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), model); // Feu de camp au centre
     models.renderModel("balancoire", glm::vec3(-3.0f, 0.0f, 2.0f), glm::vec3(0.0f, 30.0f, 0.0f), model); // Balançoire près du centre
+    models.renderModel("soleil", glm::vec3(0.0f, 100.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), model); // Soleil dans le ciel
 }
 
+// Fonction pour les lumières de la voiture
+void setCarHeadlights(Lights &lights, ShaderProgram &shader) 
+{
+    // Définir les positions et la rotation de base de la voiture pour les phares
+    glm::vec3 headlight1Pos = glm::vec3(18.4f, 1.0f, 1.5f);
+    glm::vec3 headlight2Pos = glm::vec3(18.0f, 1.0f, 2.4f);
+    float rotationAngle = glm::radians(-120.0f); // Rotation de la voiture en degrés
+
+    // Direction de base vers l'avant en fonction de la rotation de la voiture
+    glm::vec3 forwardDirection = glm::vec3(cos(rotationAngle), 0.0f, sin(rotationAngle));
+    
+    // Calculer les directions pour les deux phares
+    glm::vec3 headlight1Direction = glm::normalize(forwardDirection - headlight1Pos);
+    glm::vec3 headlight2Direction = glm::normalize(forwardDirection - headlight2Pos);
+
+    // Configurer les deux lumières directionnelles pour les phares de la voiture
+    lights.setDirectionalLight(shader, 0, headlight1Direction, glm::vec3(1.0f, 1.0f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f)); // Phare 1
+    lights.setDirectionalLight(shader, 1, headlight2Direction, glm::vec3(1.0f, 1.0f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f)); // Phare 2
+}
+
+
+
+
+// Fonction pour mettre à jour la lumière du feu avec des variations de couleur et d'intensité
+void updateFireLight(Lights& lights, ShaderProgram& shader, int index, glm::vec3 position) 
+{
+    // Générer une couleur aléatoire dans les teintes de rouge, orange et jaune
+    glm::vec3 colorOptions[] = 
+    {
+        glm::vec3(1.0f, 0.5f, 0.0f), // Orange
+        glm::vec3(1.0f, 0.3f, 0.0f), // Rouge orangé
+        glm::vec3(1.0f, 0.8f, 0.0f)  // Jaune
+    };
+    glm::vec3 chosenColor = colorOptions[rand() % 3];
+
+    // Intensité aléatoire 
+    float intensityFactor = 0.5f + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (1.0f - 0.5f)));
+
+    // Appliquer l'intensité à la couleur choisie
+    glm::vec3 ambient = chosenColor * intensityFactor * 0.2f; // Plus faible pour l'ambiant
+    glm::vec3 diffuse = chosenColor * intensityFactor;        // Pleine intensité pour le diffuse
+    glm::vec3 specular = chosenColor * 0.3f;                  // Faible valeur de speculaire pour adoucir
+
+    // Appeler setPointLight avec des valeurs d'atténuation adaptées pour la proximité
+    float constant = 1.0f;
+    float linear = 0.14f;
+    float exponent = 0.07f;
+
+    lights.setPointLight(shader, index, ambient, diffuse, specular, position, constant, linear, exponent);
+}
 
 int main()
 {
@@ -164,9 +213,13 @@ int main()
     double lastTime;
     double deltaTime;
 
-    // Variables pour la position et la direction du soleil
-    float sunAngle = 10.0f;  // Angle initial du soleil
-    glm::vec3 sunDirection;
+    // Intensité et direction du soleil
+    float intensity;
+    glm::vec3 sunPosition = glm::vec3(0.0f, 100.0f, 0.0f);
+    glm::vec3 sunDirection = glm::normalize(-sunPosition);
+
+    // Contrôle de la vitesse du cycle jour-nuit
+    float cycleSpeed = 0.2f;
 
     // Variables pour la couleur de fond jour et nuit
     glm::vec4 dayColor(0.39f, 0.66f, 0.92f, 1.0f); // Bleu clair pour le jour
@@ -197,11 +250,10 @@ int main()
     models.initializeModels(lightingShader);
 
     //Position des lumieres------------------------------------------
-    glm::vec3 pointLightPos[3] = 
+    glm::vec3 pointLightPos[2] = 
     {
-		glm::vec3(-5.0f, 3.8f, 0.0f),
-		glm::vec3(0.5f,  3.8f, 0.0f),
-		glm::vec3(5.0f,  3.8,  0.0f)
+		glm::vec3(11.47f, 3.33f, -11.42f),
+		glm::vec3(-11.1f, 2.1f, -11.1f)
 	};
     
     // Initialisation de la végétation--------------------------------
@@ -229,12 +281,11 @@ int main()
         // Effacement de la fenêtre-----------------------------
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        // Mise à jour de l'angle et direction du soleil--------
-        sunAngle = sunAngle + deltaTime * 0.01f;  // Ajustez la vitesse de rotation ici
-        sunDirection = glm::vec3(cos(sunAngle), sin(sunAngle), -0.3f); // Direction changeant au fil du temps
+        // Ajuster la luminosité du soleilen fonction du temps--
+        intensity = glm::mix(1.0f, 0.0f, nightFactor); // Ajustez les valeurs 0.1f et 1.0f pour le minimum et le maximum d'intensité.
 
         // Ajustement de la couleur de fond selon la position du soleil
-        nightFactor = glm::clamp((2.0f + sunDirection.y) / 2.0f, 0.0f, 1.0f); // Valeur entre 0 (jour) et 1 (nuit)
+        nightFactor =  glm::clamp<float>((cos(currentTime * cycleSpeed) + 1.0f) / 2.0f, 0.0f, 1.0f);
         currentBackgroundColor = glm::mix(dayColor, nightColor, nightFactor); // Mélange de couleurs
         glClearColor(currentBackgroundColor.r, currentBackgroundColor.g, currentBackgroundColor.b, currentBackgroundColor.a); // Couleur de fond
 
@@ -263,16 +314,21 @@ int main()
         lightingShader.setUniform("viewPos", viewPos);
 
 		// Configuration de la lumière directionnelle (soleil)
-        lights.setDirectionalLight(lightingShader, sunDirection, glm::vec3(1.0f, 1.0f, 0.9f), glm::vec3(0.2f, 0.2f, 0.2f)); // Lumière du soleil jaune
-
-		// Configuration des points de lumière
-        lights.setPointLight(lightingShader, 0, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[0], 1.0f, 0.22f, 0.20f); // Lumière verte
-        lights.setPointLight(lightingShader, 1, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[1], 1.0f, 0.22f, 0.20f); // Lumière rouge
-        lights.setPointLight(lightingShader, 2, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[2], 1.0f, 0.22f, 0.20f); // Lumière bleue
+        lights.setSunLight(lightingShader, sunDirection, glm::vec3(1.0f, 1.0f, 0.9f) * intensity, glm::vec3(1.0f, 1.0f, 0.8f) * intensity); // Lumière du soleil jaune
 
 		// Lampe torche
         lights.spotlightShaders(lightingShader, fpsCamera.getPosition());
-		
+
+        // Lumières de la voiture
+        //setCarHeadlights(lights, lightingShader);
+
+        // Configuration des points de lumière
+        lights.setPointLight(lightingShader, 0, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[0], 1.0f, 0.09f, 0.032f);
+        lights.setPointLight(lightingShader, 1, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[1], 1.0f, 0.09f, 0.032f);
+
+        // Lumière du feu
+        updateFireLight(lights, lightingShader, 2, glm::vec3(2.0f, 0.4f, 3.0f));
+
         // Affichage de la scene
         renderScene(model);
 
