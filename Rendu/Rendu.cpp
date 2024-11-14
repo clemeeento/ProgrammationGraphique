@@ -12,61 +12,15 @@
 #include "Mesh.hpp"
 #include "Display.hpp"
 #include "Models.hpp"
+#include "Lights.hpp"
 
 #define GLEW_STATIC
 
 FPSCamera fpsCamera(glm::vec3(0.0f, 1.5f, 10.0f));
+ShaderProgram lightingShader;
 Display display(fpsCamera);
 Models models;
-
-
-// Fonction pour définir les matrices de shader
-void setShaderMatrices(ShaderProgram& shader, const glm::mat4& model, const glm::mat4& view, const glm::mat4& projection, const glm::vec3& viewPos) 
-{
-    shader.setUniform("model", model);
-    shader.setUniform("view", view);
-    shader.setUniform("projection", projection);
-    shader.setUniform("viewPos", viewPos);
-}
-
-// Fonction pour la lampe torche
-void spotlightShaders(ShaderProgram lightingShader, glm::vec3 spotlightPos)
-{
-    lightingShader.setUniform("spotLight.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-    lightingShader.setUniform("spotLight.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-    lightingShader.setUniform("spotLight.specular", glm::vec3(2.0f, 2.0f, 2.0f));
-    lightingShader.setUniform("spotLight.position", spotlightPos);
-    lightingShader.setUniform("spotLight.direction", fpsCamera.getLook());
-    lightingShader.setUniform("spotLight.cosInnerCone", glm::cos(glm::radians(7.5f)));
-    lightingShader.setUniform("spotLight.cosOuterCone", glm::cos(glm::radians(15.0f)));
-    lightingShader.setUniform("spotLight.constant", 1.0f);
-    lightingShader.setUniform("spotLight.linear", 0.0045f);
-    lightingShader.setUniform("spotLight.exponent", 0.00075f);
-    lightingShader.setUniform("spotLight.on", display.gFlashlightOn);
-}
-
-// Fonction pour les points de lumière
-void setPointLight(ShaderProgram& shader, int index, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, glm::vec3 position, float constant, float linear, float exponent) 
-{
-    // Convertir l'index en chaîne pour accéder aux attributs uniformes des points de lumière
-    std::string base = "pointLights[" + std::to_string(index) + "].";
-
-    shader.setUniform((base + "ambient").c_str(), ambient);
-    shader.setUniform((base + "diffuse").c_str(), diffuse);
-    shader.setUniform((base + "specular").c_str(), specular);
-    shader.setUniform((base + "position").c_str(), position);
-    shader.setUniform((base + "constant").c_str(), constant);
-    shader.setUniform((base + "linear").c_str(), linear);
-    shader.setUniform((base + "exponent").c_str(), exponent);
-}
-
-// Fonction pour la lumière directionnelle
-void setDirectionalLight(ShaderProgram& shader, glm::vec3 direction, glm::vec3 diffuse, glm::vec3 specular) 
-{
-    shader.setUniform("sunLight.direction", direction);
-    shader.setUniform("sunLight.diffuse", diffuse);
-    shader.setUniform("sunLight.specular", specular);
-}
+Lights lights(fpsCamera, display);
 
 
 int main()
@@ -86,9 +40,6 @@ int main()
     glm::vec4 nightColor(0.0f, 0.0f, 0.0f, 1.0f);  // Noir pour la nuit
     float nightFactor; // Facteur de transition entre le jour et la nuit
     glm::vec4 currentBackgroundColor; // Couleur de fond actuelle
-
-    // Shaders
-    ShaderProgram lightingShader;
 
     // Matrices de modèle, vue et projection
     glm::mat4 model = glm::mat4(1.0f);   
@@ -165,29 +116,32 @@ int main()
 
         // Position de la vue
         glm::vec3 viewPos = fpsCamera.getPosition();
-
+        
         // Utiliser le programme de shader
         lightingShader.use();
 
         // Uniforms du shader .vert
-        setShaderMatrices(lightingShader, model, view, projection, viewPos);
+        lightingShader.setUniform("model", model);
+        lightingShader.setUniform("view", view);
+        lightingShader.setUniform("projection", projection);
+        lightingShader.setUniform("viewPos", viewPos);
 
 		// Configuration de la lumière directionnelle (soleil)
-        setDirectionalLight(lightingShader, sunDirection, glm::vec3(1.0f, 1.0f, 0.9f), glm::vec3(0.2f, 0.2f, 0.2f)); // Lumière du soleil jaune
+        lights.setDirectionalLight(lightingShader, sunDirection, glm::vec3(1.0f, 1.0f, 0.9f), glm::vec3(0.2f, 0.2f, 0.2f)); // Lumière du soleil jaune
 
 		// Configuration des points de lumière
-        setPointLight(lightingShader, 0, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[0], 1.0f, 0.22f, 0.20f); // Lumière verte
-        setPointLight(lightingShader, 1, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[1], 1.0f, 0.22f, 0.20f); // Lumière rouge
-        setPointLight(lightingShader, 2, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[2], 1.0f, 0.22f, 0.20f); // Lumière bleue
+        lights.setPointLight(lightingShader, 0, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[0], 1.0f, 0.22f, 0.20f); // Lumière verte
+        lights.setPointLight(lightingShader, 1, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[1], 1.0f, 0.22f, 0.20f); // Lumière rouge
+        lights.setPointLight(lightingShader, 2, glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[2], 1.0f, 0.22f, 0.20f); // Lumière bleue
 
 		// Lampe torche
-        spotlightShaders(lightingShader, fpsCamera.getPosition());
+        lights.spotlightShaders(lightingShader, fpsCamera.getPosition());
 		
         // Affichage de la scene
         // Sol
         models.renderModel("sol", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
 
-        
+
         models.renderModel("cabane1", glm::vec3(-5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
 
 
