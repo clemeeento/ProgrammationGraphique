@@ -38,8 +38,12 @@ private:
     glm::vec4 gClearColor = glm::vec4(0.392f, 0.667f, 0.922f, 1.0f);
 
     FPSCamera &fpsCamera;
+    glm::vec3 moveDirection;
 
-    const float MOVE_SPEED = 5.0;
+    const float NORMAL_MOVE_SPEED = 5.0f;
+    const float BOOSTED_MOVE_SPEED = 10.0f; // Vitesse de déplacement augmentée
+    float currentMoveSpeed = NORMAL_MOVE_SPEED; // Vitesse de déplacement actuelle
+
     const float MOUSE_SENSITIVITY = 0.1f;
     const float GROUND_HEIGHT = 1.5f; 
 };

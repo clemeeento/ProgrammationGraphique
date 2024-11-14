@@ -124,6 +124,16 @@ void Display::showFPS(GLFWwindow* gWindow)
 // Fonction de mise à jour / Deplacement de la camera
 void Display::update(double elapsedTime)
 {   
+    // Vérifiez si la touche Shift (Verr Maj) est enfoncée pour augmenter la vitesse
+    if(glfwGetKey(gWindow, GLFW_KEY_CAPS_LOCK) == GLFW_PRESS)
+    {
+        currentMoveSpeed = BOOSTED_MOVE_SPEED;
+    }
+    else
+    {
+        currentMoveSpeed = NORMAL_MOVE_SPEED;
+    }
+
     // Orientation de la caméra
     double mouseX, mouseY;
 
@@ -137,34 +147,38 @@ void Display::update(double elapsedTime)
     glfwSetCursorPos(gWindow, gWindowWidth / 2.0, gWindowHeight / 2.0);
 
     // Deplacement de la camera
+    moveDirection = fpsCamera.getLook();
+    moveDirection.y = 0.0f;  // Ignore la composante verticale
+    moveDirection = glm::normalize(moveDirection); // Re-normalise le vecteur
+
     // Avant / Arrière
     if(glfwGetKey(gWindow, GLFW_KEY_W) == GLFW_PRESS)
     {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getLook());
+        fpsCamera.move(currentMoveSpeed * (float)elapsedTime * moveDirection);
     }
     else if(glfwGetKey(gWindow, GLFW_KEY_S) == GLFW_PRESS)
     {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getLook());
+        fpsCamera.move(currentMoveSpeed * (float)elapsedTime * -moveDirection);
     }
 
     // Gauche / Droite
     if(glfwGetKey(gWindow, GLFW_KEY_A) == GLFW_PRESS)
     {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getRight());
+        fpsCamera.move(currentMoveSpeed * (float)elapsedTime * -fpsCamera.getRight());
     }
     else if(glfwGetKey(gWindow, GLFW_KEY_D) == GLFW_PRESS)
     {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getRight());
+        fpsCamera.move(currentMoveSpeed * (float)elapsedTime * fpsCamera.getRight());
     }
 
     // Haut / Bas
     if(glfwGetKey(gWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * fpsCamera.getUp());
+        fpsCamera.move(currentMoveSpeed * (float)elapsedTime * fpsCamera.getUp());
     }
     else if(glfwGetKey(gWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
     {
-        fpsCamera.move(MOVE_SPEED * (float)elapsedTime * -fpsCamera.getUp());
+        fpsCamera.move(currentMoveSpeed * (float)elapsedTime * -fpsCamera.getUp());
     }
 
     // Vérification de la hauteur pour empêcher de traverser le sol
