@@ -22,6 +22,139 @@ Display display(fpsCamera);
 Models models;
 Lights lights(fpsCamera, display);
 
+// Structure pour stocker la vegetation
+struct SceneObject {
+    std::string name;
+    glm::vec3 position;
+    glm::vec3 rotation;
+};
+
+// Vecteur pour stocker la vegetation
+std::vector<SceneObject> vegetation;
+
+// Fonction pour initialiser la végétation
+void initializeSceneObjects() 
+{
+
+    for (int i = -150; i <= 150; i = i + 10) 
+    {
+        for (int j = -150; j <= 150; j = j + 10) 
+        {
+            if (i * i + j * j > 800) // Éviter la forêt proche du village
+            {
+                glm::vec3 position(i + (rand() % 2) + (rand() % 2), 0.0f, j + (rand() % 2) - (rand() % 2)); // Position aléatoire + ou - 2
+                glm::vec3 rotation(0.0f, rand() % 360, 0.0f);
+
+                int randomProbability = rand() % 100; // Probabilité (0 à 99)
+
+                if (randomProbability < 80) 
+                { 
+                    // 85% de probabilité pour les arbres
+                    int randomTree = rand() % 3;
+                    switch(randomTree) 
+                    {
+                        case 0: vegetation.push_back({"sapin", position, rotation}); break;
+                        case 1: vegetation.push_back({"pin", position, rotation}); break;
+                        case 2: vegetation.push_back({"chene", position, rotation}); break;
+                    }
+                } 
+                else
+                { 
+                    // 15% pour autres types de végétation
+                    int randomVegetation = rand() % 3;
+                    switch(randomVegetation) 
+                    {
+                        case 0: vegetation.push_back({"arbuste", position, rotation}); break;
+                        case 1: vegetation.push_back({"tronc1", position, rotation}); break;
+                        case 2: vegetation.push_back({"pomme_pin", position, rotation}); break;
+                    }
+                } 
+            }
+        }
+    }
+}
+
+
+
+// Fontion pour afficher la scene complete
+void renderScene(glm::mat4 model)
+{
+    // Sol de base---------------------------------------------------
+    models.renderModel("sol", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+
+    // Positionner les bâtiments avec un espacement légèrement réduit (distance minimum de 9 unités)
+    models.renderModel("cabane1", glm::vec3(-14.0f, 0.0f, -14.0f), glm::vec3(0.0f, 45.0f, 0.0f), model);
+    models.renderModel("cabane2", glm::vec3(14.0f, 0.0f, -14.0f), glm::vec3(0.0f, -45.0f, 0.0f), model);
+    models.renderModel("chalet", glm::vec3(-15.0f, 0.0f, 7.0f), glm::vec3(0.0f, 290.0f, 0.0f), model);
+    models.renderModel("eglise", glm::vec3(0.0f, 0.0f, 19.0f), glm::vec3(0.0f, 180.0f, 0.0f), model);
+    models.renderModel("cabane_rondins", glm::vec3(15.0f, 0.0f, 7.0f), glm::vec3(0.0f, -120.0f, 0.0f), model);
+    models.renderModel("cabane_arbre", glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+
+    // Végétation (forêt)--------------------------------------------
+    for (const auto& plant : vegetation) 
+    {
+        models.renderModel(plant.name, plant.position, plant.rotation, model);
+    }
+
+    // Animaux-------------------------------------------------------
+    // Plusieurs oiseaux dans le ciel à une hauteur de 30
+    models.renderModel("oiseau", glm::vec3(-10.0f, 30.0f, -20.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+    models.renderModel("oiseau", glm::vec3(15.0f, 30.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+    models.renderModel("oiseau", glm::vec3(-5.0f, 30.0f, 15.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+    models.renderModel("oiseau", glm::vec3(25.0f, 30.0f, -10.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+    models.renderModel("oiseau", glm::vec3(-20.0f, 30.0f, 25.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+
+    // Ajout de groupes de chaque animal pour plus de vie dans la forêt
+
+    // Blaireaux
+    models.renderModel("blaireau", glm::vec3(-25.0f, 0.0f, 10.0f), glm::vec3(0.0f, 15.0f, 0.0f), model);
+    models.renderModel("blaireau", glm::vec3(-28.0f, 0.0f, 12.0f), glm::vec3(0.0f, -30.0f, 0.0f), model);
+
+    // Sangliers
+    models.renderModel("sanglier", glm::vec3(-18.0f, 0.0f, 25.0f), glm::vec3(0.0f, -30.0f, 0.0f), model);
+    models.renderModel("sanglier", glm::vec3(-20.0f, 0.0f, 23.0f), glm::vec3(0.0f, 45.0f, 0.0f), model);
+
+    // Cerfs
+    models.renderModel("cerf", glm::vec3(30.0f, 0.0f, -25.0f), glm::vec3(0.0f, 45.0f, 0.0f), model);
+    models.renderModel("cerf", glm::vec3(28.0f, 0.0f, -27.0f), glm::vec3(0.0f, 30.0f, 0.0f), model);
+
+    // Elans
+    models.renderModel("elan", glm::vec3(-35.0f, 0.0f, 20.0f), glm::vec3(0.0f, -20.0f, 0.0f), model);
+    models.renderModel("elan", glm::vec3(-33.0f, 0.0f, 22.0f), glm::vec3(0.0f, 10.0f, 0.0f), model);
+
+    // Faons proches des élans
+    models.renderModel("faon", glm::vec3(-36.0f, 0.0f, 18.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+    models.renderModel("faon", glm::vec3(-32.0f, 0.0f, 24.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
+
+    // Furets
+    models.renderModel("furet", glm::vec3(20.0f, 0.0f, 30.0f), glm::vec3(0.0f, 90.0f, 0.0f), model);
+    models.renderModel("furet", glm::vec3(18.0f, 0.0f, 32.0f), glm::vec3(0.0f, -45.0f, 0.0f), model);
+
+    // Renards
+    models.renderModel("renard", glm::vec3(-20.0f, 0.0f, -30.0f), glm::vec3(0.0f, -45.0f, 0.0f), model);
+    models.renderModel("renard", glm::vec3(-22.0f, 0.0f, -28.0f), glm::vec3(0.0f, 25.0f, 0.0f), model);
+
+    // Lapins dispersés en petits groupes
+    models.renderModel("lapin", glm::vec3(22.0f, 0.0f, -28.0f), glm::vec3(0.0f, 15.0f, 0.0f), model);
+    models.renderModel("lapin", glm::vec3(24.0f, 0.0f, -30.0f), glm::vec3(0.0f, -10.0f, 0.0f), model);
+    models.renderModel("lapin", glm::vec3(25.0f, 0.0f, -26.0f), glm::vec3(0.0f, 5.0f, 0.0f), model);
+    models.renderModel("lapin", glm::vec3(-15.0f, 0.0f, 32.0f), glm::vec3(0.0f, -10.0f, 0.0f), model);
+    models.renderModel("lapin", glm::vec3(-14.0f, 0.0f, 34.0f), glm::vec3(0.0f, 20.0f, 0.0f), model);
+
+    // Loups éloignés
+    models.renderModel("loup", glm::vec3(-40.0f, 0.0f, 40.0f), glm::vec3(0.0f, 180.0f, 0.0f), model);
+    models.renderModel("loup", glm::vec3(35.0f, 0.0f, 25.0f), glm::vec3(0.0f, -45.0f, 0.0f), model);
+
+
+    // Accessoires---------------------------------------------------
+    models.renderModel("voiture", glm::vec3(-17.0f, 0.0f, -11.0f), glm::vec3(0.0f, 45.0f, 0.0f), model); // Cabane1
+    models.renderModel("voiture", glm::vec3(18.0f, 0.0f, -12.0f), glm::vec3(0.0f, -45.0f, 0.0f), model); // Cabane2
+    models.renderModel("voiture", glm::vec3(-13.0f, 0.0f, 12.0f), glm::vec3(0.0f, 110.0f, 0.0f), model); // Chalet
+    models.renderModel("voiture", glm::vec3(20.0f, 0.0f, 3.0f), glm::vec3(0.0f, -120.0f, 0.0f), model); // Cabane en rondins
+    models.renderModel("feu_camp", glm::vec3(2.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), model); // Feu de camp au centre
+    models.renderModel("balancoire", glm::vec3(-3.0f, 0.0f, 2.0f), glm::vec3(0.0f, 30.0f, 0.0f), model); // Balançoire près du centre
+}
+
 
 int main()
 {
@@ -71,6 +204,9 @@ int main()
 		glm::vec3(5.0f,  3.8,  0.0f)
 	};
     
+    // Initialisation de la végétation--------------------------------
+    initializeSceneObjects();
+
     // Temps écoulé depuis l'initialisation de GLFW------------------
     lastTime = glfwGetTime(); 
 
@@ -138,12 +274,7 @@ int main()
         lights.spotlightShaders(lightingShader, fpsCamera.getPosition());
 		
         // Affichage de la scene
-        // Sol
-        models.renderModel("sol", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
-
-
-        models.renderModel("cabane1", glm::vec3(-5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), model);
-
+        renderScene(model);
 
         // Afficher la position de la camera
         std::cout << "Position de la camera : " << viewPos.x << " " << viewPos.y << " " << viewPos.z << std::endl;
