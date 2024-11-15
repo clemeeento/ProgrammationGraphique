@@ -152,6 +152,10 @@ void renderScene(glm::mat4 model)
     models.renderModel("feu_camp", glm::vec3(2.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), model); // Feu de camp au centre
     models.renderModel("balancoire", glm::vec3(-3.0f, 0.0f, 2.0f), glm::vec3(0.0f, 30.0f, 0.0f), model); // Balançoire près du centre
     models.renderModel("soleil", glm::vec3(0.0f, 100.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), model); // Soleil dans le ciel
+
+    // Lumières-----------------------------------------------------
+    models.renderModel("lumiere", glm::vec3(11.5f, 3.25f, -11.5f), glm::vec3(0.0f, 0.0f, 0.0f), model); // Lumière 1
+    models.renderModel("lumiere", glm::vec3(-11.21f, 2.07f, -11.21f), glm::vec3(0.0f, 0.0f, 0.0f), model); // Lumière 2
 }
 
 // Fonction pour mettre à jour la lumière du feu avec des variations de couleur et d'intensité
@@ -181,7 +185,6 @@ void updateFireLight(Lights& lights, ShaderProgram& shader, int index, glm::vec3
 
     lights.setPointLight(shader, index, ambient, diffuse, specular, position, constant, linear, exponent);
 }
-
 
 
 int main()
@@ -231,8 +234,8 @@ int main()
     //Position des lumieres------------------------------------------
     glm::vec3 pointLightPos[2] = 
     {
-		glm::vec3(11.47f, 3.33f, -11.42f),
-		glm::vec3(-11.1f, 2.1f, -11.1f)
+		glm::vec3(11.5f, 3.25f, -11.5f),
+		glm::vec3(-11.21f, 2.07f, -11.21f)
 	};
     
     // Initialisation de la végétation--------------------------------

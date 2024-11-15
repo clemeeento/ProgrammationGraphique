@@ -46,6 +46,7 @@ void Models::initializeModels(ShaderProgram &shader)
         { "voiture", "Models/Car.obj", "Textures/Car.png", glm::vec3(0.04f, 0.04f, 0.04f) },
         { "balancoire", "Models/Swing.obj", "Textures/Swing.png", glm::vec3(0.016f, 0.016f, 0.016f) },
         { "soleil", "Models/Sun.obj", "Textures/Sun.png", glm::vec3(0.5f, 0.5f, 0.5f) },
+        { "lumiere", "Models/Light.obj", "Textures/Light.jpg", glm::vec3(0.3f, 0.3f, 0.3f) }
     };
 
     // Chargement des modeles, textures et echelles dans la map de modeles
