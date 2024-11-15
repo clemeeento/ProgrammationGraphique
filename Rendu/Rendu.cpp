@@ -154,29 +154,6 @@ void renderScene(glm::mat4 model)
     models.renderModel("soleil", glm::vec3(0.0f, 100.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), model); // Soleil dans le ciel
 }
 
-// Fonction pour les lumières de la voiture
-void setCarHeadlights(Lights &lights, ShaderProgram &shader) 
-{
-    // Définir les positions et la rotation de base de la voiture pour les phares
-    glm::vec3 headlight1Pos = glm::vec3(18.4f, 1.0f, 1.5f);
-    glm::vec3 headlight2Pos = glm::vec3(18.0f, 1.0f, 2.4f);
-    float rotationAngle = glm::radians(-120.0f); // Rotation de la voiture en degrés
-
-    // Direction de base vers l'avant en fonction de la rotation de la voiture
-    glm::vec3 forwardDirection = glm::vec3(cos(rotationAngle), 0.0f, sin(rotationAngle));
-    
-    // Calculer les directions pour les deux phares
-    glm::vec3 headlight1Direction = glm::normalize(forwardDirection - headlight1Pos);
-    glm::vec3 headlight2Direction = glm::normalize(forwardDirection - headlight2Pos);
-
-    // Configurer les deux lumières directionnelles pour les phares de la voiture
-    lights.setDirectionalLight(shader, 0, headlight1Direction, glm::vec3(1.0f, 1.0f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f)); // Phare 1
-    lights.setDirectionalLight(shader, 1, headlight2Direction, glm::vec3(1.0f, 1.0f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f)); // Phare 2
-}
-
-
-
-
 // Fonction pour mettre à jour la lumière du feu avec des variations de couleur et d'intensité
 void updateFireLight(Lights& lights, ShaderProgram& shader, int index, glm::vec3 position) 
 {
@@ -205,6 +182,8 @@ void updateFireLight(Lights& lights, ShaderProgram& shader, int index, glm::vec3
     lights.setPointLight(shader, index, ambient, diffuse, specular, position, constant, linear, exponent);
 }
 
+
+
 int main()
 {
     // Déclaration des variables-------------------------------------
@@ -219,7 +198,7 @@ int main()
     glm::vec3 sunDirection = glm::normalize(-sunPosition);
 
     // Contrôle de la vitesse du cycle jour-nuit
-    float cycleSpeed = 0.2f;
+    float cycleSpeed = 0.1f;
 
     // Variables pour la couleur de fond jour et nuit
     glm::vec4 dayColor(0.39f, 0.66f, 0.92f, 1.0f); // Bleu clair pour le jour
@@ -319,9 +298,6 @@ int main()
 		// Lampe torche
         lights.spotlightShaders(lightingShader, fpsCamera.getPosition());
 
-        // Lumières de la voiture
-        //setCarHeadlights(lights, lightingShader);
-
         // Configuration des points de lumière
         lights.setPointLight(lightingShader, 0, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[0], 1.0f, 0.09f, 0.032f);
         lights.setPointLight(lightingShader, 1, glm::vec3(0.1f, 0.1f, 0.1f), glm::vec3(0.8f, 0.8f, 0.8f), glm::vec3(1.0f, 1.0f, 1.0f), pointLightPos[1], 1.0f, 0.09f, 0.032f);
@@ -331,9 +307,6 @@ int main()
 
         // Affichage de la scene
         renderScene(model);
-
-        // Afficher la position de la camera
-        std::cout << "Position de la camera : " << viewPos.x << " " << viewPos.y << " " << viewPos.z << std::endl;
 
         // Echange des buffers----------------------------------
         glfwSwapBuffers(display.gWindow);

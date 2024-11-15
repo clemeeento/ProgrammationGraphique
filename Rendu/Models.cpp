@@ -83,7 +83,7 @@ void Models::renderModel(std::string name, glm::vec3 position, glm::vec3 rotatio
 
     // Uniforms
     modelData.shader.setUniform("model", model);
-    modelData.shader.setUniform("material.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
+    modelData.shader.setUniform("material.ambient", glm::vec3(0.5f, 0.5f, 0.5f));
     modelData.shader.setUniformSampler("material.diffuseMap", 0);
     modelData.shader.setUniform("material.specular", glm::vec3(0.8f, 0.8f, 0.8f));
     modelData.shader.setUniform("material.shininess", 32.0f);

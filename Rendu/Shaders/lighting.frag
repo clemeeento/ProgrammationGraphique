@@ -50,10 +50,8 @@ in vec3 FragPos;
 in vec3 Normal;
 
 #define POINT_LIGHTS 3
-#define DIRECTIONAL_LIGHTS 2
 
 uniform DirectionalLight sunLight;
-uniform DirectionalLight directionalLight[DIRECTIONAL_LIGHTS];
 uniform PointLight pointLights[POINT_LIGHTS];
 uniform SpotLight spotLight;
 uniform Material material;
@@ -145,12 +143,6 @@ void main()
 
 	// Ajouter la couleur de la lumière du soleil
 	outColor = outColor + calcDirectionalLightColor(sunLight, normal, viewDir);
-
-	// Appliquer chaque lumière directionnelle
-	for(int i = 0; i < DIRECTIONAL_LIGHTS; i++)
-	{
-		outColor = outColor + calcDirectionalLightColor(directionalLight[i], normal, viewDir);
-	}
 
 	// Appliquer chaque lumière ponctuelle
 	for(int i = 0; i < POINT_LIGHTS; i++)
