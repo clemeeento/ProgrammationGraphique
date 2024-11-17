@@ -23,17 +23,17 @@ Pour exécuter le code présent dans ce dépôt, vous aurez besoin des biblioth�
 Les vidéos du cours sont hébergées sur une plateforme privée, accessible uniquement via le site du professeur. Voici la liste des vidéos accompagnées de leur progression :  
 
 1. **Introduction** : vidéo de présentation.
-2. **Window and Input** : dossier *Window and Input*.
-3. **First Triangle** : dossier *First Triangle*.
-4. **Shaders** : dossier *Shaders*.
-5. **Texture Mapping** : dossier *Shaders*.
+2. **Window and Input** : dossier `Window and Input`.
+3. **First Triangle** : dossier `First Triangle`.
+4. **Shaders** : dossier `Shaders`.
+5. **Texture Mapping** : dossier `Shaders`.
 6. **Coordinate System**
-7. **Virtual Camera I** : dossier *Virtual Camera*.
-8. **Virtual Camera II** : dossier *Virtual Camera*.
-9. **Load Object** : dossier *Load Object*.
-10. **Basic Lightning I** : dossier *Basic Lightning*.
-11. **Basic Lightning II** : dossier *Basic Lightning*.
-12. **Basic Lightning III** : dossier *Basic Lightning*.
+7. **Virtual Camera I** : dossier `Virtual Camera`.
+8. **Virtual Camera II** : dossier `Virtual Camera`.
+9. **Load Object** : dossier `Load Object`.
+10. **Basic Lightning I** : dossier `Basic Lightning`.
+11. **Basic Lightning II** : dossier `Basic Lightning`.
+12. **Basic Lightning III** : dossier `Basic Lightning`.
 
 Avancement : Toutes les vidéos (12/12) ont été suivies et leur code associé est inclus dans ce dépôt.
 
@@ -42,7 +42,7 @@ Avancement : Toutes les vidéos (12/12) ont été suivies et leur code associé 
 
 ### **Description**
 
-Le projet final disponible dans le dossier *Rendu* met en œuvre toutes les notions apprises dans le cours pour créer une scène 3D interactive et réaliste. Voici les fonctionnalités principales :
+Le projet final disponible dans le dossier `Rendu` met en œuvre toutes les notions apprises dans le cours pour créer une scène 3D interactive et réaliste. Voici les fonctionnalités principales :
 
 - **Chargement de modèles 3D** : Les objets sont importés à partir de fichiers externes et rendus dans la scène.
 - **Système de caméra** : Une caméra virtuelle permet d'explorer la scène de manière dynamique.
@@ -77,7 +77,7 @@ Le projet est organisé en plusieurs modules, chacun jouant un rôle spécifique
 
 ### **Démonstration**
 
-Une vidéo de démonstration (*Présenation du rendu*) est disponible pour illustrer le rendu final de ce projet.
+Une vidéo de démonstration (`Présenation du rendu`) est disponible pour illustrer le rendu final de ce projet.
 
 
 ## **Compilation et Exécution**
